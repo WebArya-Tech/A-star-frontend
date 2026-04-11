@@ -1,0 +1,32 @@
+<svg viewBox="0 0 768 768" xmlns="http://www.w3.org/2000/svg">
+  <!-- Beige background -->
+  <rect width="768" height="768" fill="#F5EFE7"/>
+  
+  <!-- Outer star frame with colored segments -->
+  <!-- Red triangle top -->
+  <polygon points="384,60 470,240 298,240" fill="#E63946"/>
+  
+  <!-- Blue left segment -->
+  <polygon points="298,240 140,380 220,300" fill="#1D5A96"/>
+  
+  <!-- Green right segment -->
+  <polygon points="470,240 628,380 548,300" fill="#2DB876"/>
+  
+  <!-- Blue bottom left -->
+  <polygon points="220,300 90,480 200,400" fill="#1D5A96"/>
+  
+  <!-- Green bottom right -->
+  <polygon points="548,300 678,480 568,400" fill="#2DB876"/>
+  
+  <!-- White inner star -->
+  <polygon points="384,100 440,200 540,200 460,260 510,360 384,300 258,360 308,260 228,200 328,200" fill="white"/>
+  
+  <!-- Yellow 'A' letter -->
+  <text x="384" y="360" font-size="140" font-weight="bold" fill="#F4D35E" text-anchor="middle" font-family="Arial, sans-serif">A</text>
+  
+  <!-- Text: A STAR CLASSES -->
+  <text x="384" y="560" font-size="68" font-weight="bold" fill="#1D5A96" text-anchor="middle" font-family="Arial, sans-serif">A STAR CLASSES</text>
+  
+  <!-- Text: AS and A Levels | IGCSE -->
+  <text x="384" y="620" font-size="40" fill="#1D5A96" text-anchor="middle" font-family="Arial, sans-serif">AS and A Levels | IGCSE</text>
+</svg>
