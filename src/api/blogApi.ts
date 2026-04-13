@@ -601,7 +601,7 @@ export const adminApi = {
     async getPendingComments(params?: QueryRecord) {
         try {
             return await request<{ content: AdminComment[]; page: number; totalPages: number; totalElements: number }>(
-                `/admin/comments/pending${toQueryString(params)}`,
+                `/admin/api/comments/pending${toQueryString(params)}`,
                 { method: 'GET' }
             );
         } catch {
@@ -660,9 +660,42 @@ export const adminApi = {
         }
     },
 
+    async getAllComments(params?: QueryRecord) {
+        try {
+            return await request<{ content: AdminComment[]; page: number; totalPages: number; totalElements: number }>(
+                `/admin/api/comments/all${toQueryString(params)}`,
+                { method: 'GET' }
+            );
+        } catch {
+            const page = Number(params?.page ?? 0);
+            const size = Number(params?.size ?? 10);
+            const comments = getCommentsStore();
+            return { data: paginateList(comments, page, size) };
+        }
+    },
+
+    async approveComment(id: number | string) {
+        try {
+            return await request<Record<string, unknown>>(`/admin/api/comments/${id}/approve`, { method: 'POST' });
+        } catch {
+            return { data: { success: true } };
+        }
+    },
+
+    async editComment(id: number | string, commentText: string) {
+        try {
+            return await request<Record<string, unknown>>(`/admin/api/comments/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ commentText }),
+            });
+        } catch {
+            return { data: { success: true } };
+        }
+    },
+
     async deleteComment(id: number | string) {
         try {
-            return await request<Record<string, unknown>>(`/admin/comments/${id}`, { method: 'DELETE' });
+            return await request<Record<string, unknown>>(`/admin/api/comments/${id}`, { method: 'DELETE' });
         } catch {
             const nextComments = getCommentsStore().filter((comment) => comment.id !== Number(id));
             setCommentsStore(nextComments);

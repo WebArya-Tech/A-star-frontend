@@ -47,6 +47,31 @@ export const adminLogin = async (email, password) => {
   }
 };
 
+// Admin Login OTP (Request)
+export const requestAdminLoginOTP = async (email) => {
+  try {
+    const response = await api.post('/api/admin/auth/login-otp/request', { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Admin Login OTP (Verify)
+export const verifyAdminLoginOTP = async (data) => {
+  try {
+    // data: { email, otp }
+    const response = await api.post('/api/admin/auth/login-otp/verify', data);
+    if (response.data.token) {
+      localStorage.setItem('icfy_token', response.data.token);
+      localStorage.setItem('icfy_role', 'admin');
+    }
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 // Admin Forgot Password (Request OTP)
 export const adminForgotPassword = async (email) => {
   try {
