@@ -147,7 +147,12 @@ export const SubmitBlogPage = () => {
     const handleStep3 = async () => {
         setLoading(true);
         try {
-            await blogApi.finishSubmission({ email: formData.authorEmail });
+            await blogApi.finishSubmission({
+                ...formData,
+                email: formData.authorEmail,
+                contentHtml: formData.content, // Map content to contentHtml for backend
+                tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean)
+            });
             clearDraft(); // Clear draft on successful submission
             toast.success('Blog submitted!'); setStep(4);
         }

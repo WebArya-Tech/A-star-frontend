@@ -119,7 +119,8 @@ const Login = () => {
             }}
             className="text-sm text-blue-700 hover:underline"
           >
-            {useOtpLogin ? 'Use password login' : 'Use OTP login'}
+            {/* {useOtpLogin ? 'Use password login' : 'Use OTP login'} */}
+            {useOtpLogin ? 'Use password login' : ''}
           </button>
         </div>
 
@@ -185,52 +186,54 @@ const Login = () => {
               </button>
             )}
           </form>
-        ) : (
-          <form className="mt-6 space-y-4" onSubmit={handlePasswordLogin}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email or Username
-              </label>
-              <input
-                type="text"
-                id="email"
-                autoComplete="username"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`mt-1 block w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="Enter your email or username"
-              />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`mt-1 block w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="Enter your password"
-              />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-            </div>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-blue-800 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
-            >
-              {isSubmitting ? 'Logging in...' : 'Login'}
-            </button>
-            <div className="text-right">
-              <Link to="/reset-password" className="text-sm text-blue-700 hover:underline">
-                Forgot Password?
-              </Link>
-            </div>
-          </form>
-        )}
+        )
+          :
+          (
+            <form className="mt-6 space-y-4" onSubmit={handlePasswordLogin}>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email or Username
+                </label>
+                <input
+                  type="text"
+                  id="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`mt-1 block w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="Enter your email or username"
+                />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`mt-1 block w-full px-3 py-2 border ${errors.password ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="Enter your password"
+                />
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-800 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-60"
+              >
+                {isSubmitting ? 'Logging in...' : 'Login'}
+              </button>
+              <div className="text-right">
+                <Link to="/reset-password" className="text-sm text-blue-700 hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
+            </form>
+          )}
 
         <p className="mt-4 text-sm text-center text-gray-600">
           Don't have an account?{' '}

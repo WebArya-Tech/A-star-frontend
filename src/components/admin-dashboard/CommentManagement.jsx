@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { blogApi, adminApi } from '../../api/blogApi';
 import {
     MessageSquare, Trash2, Eye, ChevronLeft, ChevronRight,
@@ -80,13 +80,25 @@ export const CommentManagement = ({ onBack }) => {
     const fetchComments = useCallback(async (blogId, page = 0) => {
         setCommentsLoading(true);
         try {
-            const r = await blogApi.getComments(blogId, { page, size: COMMENT_PAGE_SIZE });
-            setComments(r.data?.content || []);
-            setCommentPage(r.data?.page ?? page);
-            setCommentPagination({
-                totalPages: r.data?.totalPages || 0,
-                totalElements: r.data?.totalElements || 0,
-            });
+            if (blogId === 'pending') {
+                const r = await adminApi.getPendingComments({ page, size: COMMENT_PAGE_SIZE });
+                setComments(r.data?.content || []);
+                setCommentPage(r.data?.page ?? page);
+                setCommentPagination({
+                    totalPages: r.data?.totalPages || 0,
+                    totalElements: r.data?.totalElements || 0,
+                });
+            } else {
+                // If the backend has a specific admin endpoint for a blog's comments, we'd use it here.
+                // For now, this fetches public comments.
+                const r = await blogApi.getComments(blogId, { page, size: COMMENT_PAGE_SIZE });
+                setComments(r.data?.content || []);
+                setCommentPage(r.data?.page ?? page);
+                setCommentPagination({
+                    totalPages: r.data?.totalPages || 0,
+                    totalElements: r.data?.totalElements || 0,
+                });
+            }
         } catch {
             toast.error('Failed to load comments');
             setComments([]);
@@ -102,6 +114,13 @@ export const CommentManagement = ({ onBack }) => {
         fetchComments(blog.id, 0);
     };
 
+    const openPendingQueue = () => {
+        setSelectedBlog({ id: 'pending', title: 'Global Pending Approvals Queue', status: 'PENDING' });
+        setComments([]);
+        setCommentPage(0);
+        fetchComments('pending', 0);
+    };
+
     const closeBlog = () => {
         setSelectedBlog(null);
         setComments([]);
@@ -110,6 +129,24 @@ export const CommentManagement = ({ onBack }) => {
     // ── Actions ──────────────────────────────────────────────────
 
 
+    const handleApprove = async (comment) => {
+        setActionLoading(comment.id);
+        try {
+            await adminApi.approveComment(comment.id);
+            toast.success('Comment approved!');
+            // Remove it from the pending list if we are in the pending queue
+            if (selectedBlog?.id === 'pending') {
+                setComments(prev => prev.filter(c => c.id !== comment.id));
+            } else {
+                setComments(prev => prev.map(c => c.id === comment.id ? { ...c, status: 'VISIBLE' } : c));
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to approve');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     const handleDelete = async () => {
         if (!deleteConfirm) return;
         setActionLoading(deleteConfirm.id);
@@ -117,12 +154,14 @@ export const CommentManagement = ({ onBack }) => {
             await adminApi.deleteComment(deleteConfirm.id);
             toast.success('Comment deleted');
             setComments(prev => prev.filter(c => c.id !== deleteConfirm.id));
-            setBlogs(prev => prev.map(b =>
-                b.id === selectedBlog.id
-                    ? { ...b, commentsCount: Math.max(0, (b.commentsCount || 1) - 1) }
-                    : b
-            ));
-            setSelectedBlog(prev => ({ ...prev, commentsCount: Math.max(0, (prev.commentsCount || 1) - 1) }));
+            if (selectedBlog?.id !== 'pending') {
+                setBlogs(prev => prev.map(b =>
+                    b.id === selectedBlog.id
+                        ? { ...b, commentsCount: Math.max(0, (b.commentsCount || 1) - 1) }
+                        : b
+                ));
+                setSelectedBlog(prev => ({ ...prev, commentsCount: Math.max(0, (prev.commentsCount || 1) - 1) }));
+            }
             setDeleteConfirm(null);
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to delete');
@@ -209,6 +248,12 @@ export const CommentManagement = ({ onBack }) => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0 self-end md:self-start mt-1">
+                                        {c.status === 'PENDING' && (
+                                            <button onClick={() => handleApprove(c)} disabled={actionLoading === c.id}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-600 hover:bg-green-100 transition disabled:opacity-50">
+                                                Approve
+                                            </button>
+                                        )}
                                         <button onClick={() => setViewComment(c)}
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition">
                                             <Eye className="w-3.5 h-3.5" /> View
@@ -271,12 +316,19 @@ export const CommentManagement = ({ onBack }) => {
                                 {viewComment.commentText}
                             </p>
                             <div className="flex gap-2 justify-end">
-                                <button
-                                    onClick={() => { setDeleteConfirm(viewComment); setViewComment(null); }}
-                                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition">
-                                    <Trash2 className="w-4 h-4" /> Delete
-                                </button>
-                            </div>
+                                        {viewComment.status === 'PENDING' && (
+                                            <button
+                                                onClick={() => { handleApprove(viewComment); setViewComment(null); }}
+                                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-green-50 text-green-600 hover:bg-green-100 transition">
+                                                Approve
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => { setDeleteConfirm(viewComment); setViewComment(null); }}
+                                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition">
+                                            <Trash2 className="w-4 h-4" /> Delete
+                                        </button>
+                                    </div>
                         </div>
                     </div>
                 )}
@@ -350,9 +402,15 @@ export const CommentManagement = ({ onBack }) => {
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] focus:border-transparent" />
                 </div>
 
-                <p className="text-sm text-gray-500 mb-4">
-                    <span className="font-semibold text-gray-700">{blogPagination.totalElements}</span> blogs total · Click a blog to see its comments
-                </p>
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
+                    <p className="text-sm text-gray-500">
+                        <span className="font-semibold text-gray-700">{blogPagination.totalElements}</span> blogs total · Click a blog to see its comments
+                    </p>
+                    <button onClick={openPendingQueue}
+                        className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-bold hover:bg-yellow-200 transition">
+                        View Pending Approvals Queue
+                    </button>
+                </div>
 
                 {/* Blogs table */}
                 {blogsLoading ? (

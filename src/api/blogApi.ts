@@ -311,7 +311,7 @@ export const blogApi = {
     async getBlogs(params?: QueryRecord) {
         try {
             return await request<{ content: unknown[]; page: number; totalPages: number; totalElements: number }>(
-                `/blogs${toQueryString(params)}`,
+                `/api/blogs${toQueryString(params)}`,
                 { method: 'GET' }
             );
         } catch {
@@ -325,7 +325,7 @@ export const blogApi = {
     async getArchive() {
         try {
             return await request<Array<{ year: number; months: Array<{ month: number; count: number }> }>>(
-                '/blogs/archive',
+                '/api/blogs/archive',
                 { method: 'GET' }
             );
         } catch {
@@ -356,7 +356,7 @@ export const blogApi = {
     async getBlogBySlug(slug?: string) {
         const safeSlug = encodeURIComponent(slug || '');
         try {
-            return await request<Record<string, unknown>>(`/blogs/${safeSlug}`, { method: 'GET' });
+            return await request<Record<string, unknown>>(`/api/blogs/${safeSlug}`, { method: 'GET' });
         } catch {
             const blog = buildPublicBlogsFromAdmin().find((entry) => entry.slug === slug);
             if (!blog) {
@@ -368,7 +368,7 @@ export const blogApi = {
 
     getComments(blogId: number | string, params?: QueryRecord) {
         return request<{ content: Array<Record<string, unknown>> }>(
-            `/blogs/${blogId}/comments${toQueryString(params)}`,
+            `/api/blogs/${blogId}/comments${toQueryString(params)}`,
             { method: 'GET' }
         ).catch(() => {
             const page = Number(params?.page ?? 0);
@@ -380,7 +380,7 @@ export const blogApi = {
 
     async postComment(blogId: number | string, payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>(`/blogs/${blogId}/comments`, {
+            return await request<Record<string, unknown>>(`/api/blogs/${blogId}/comments`, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -402,7 +402,7 @@ export const blogApi = {
     async getReactionStatus(blogId: number | string, visitorKey: string) {
         try {
             return await request<Record<string, unknown>>(
-                `/blogs/${blogId}/reactions/status${toQueryString({ visitorKey })}`,
+                `/api/blogs/${blogId}/reactions/status${toQueryString({ visitorKey })}`,
                 { method: 'GET' }
             );
         } catch {
@@ -415,7 +415,7 @@ export const blogApi = {
 
     async toggleReaction(blogId: number | string, payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>(`/blogs/${blogId}/reactions/toggle`, {
+            return await request<Record<string, unknown>>(`/api/blogs/${blogId}/reactions/toggle`, {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -442,7 +442,7 @@ export const blogApi = {
 
     async startSubmission(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/blogs/submissions/start', {
+            return await request<Record<string, unknown>>('/api/blogs/submissions/start', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -453,7 +453,7 @@ export const blogApi = {
 
     async verifySubmission(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/blogs/submissions/verify', {
+            return await request<Record<string, unknown>>('/api/blogs/submissions/verify', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -468,7 +468,7 @@ export const blogApi = {
 
     async finishSubmission(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/blogs/submissions/finish', {
+            return await request<Record<string, unknown>>('/api/blogs/submissions/finish', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -506,7 +506,7 @@ export const blogApi = {
 
     async startSubscription(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/blogs/subscriptions/start', {
+            return await request<Record<string, unknown>>('/api/blogs/subscriptions/start', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -517,7 +517,7 @@ export const blogApi = {
 
     async verifySubscription(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/blogs/subscriptions/verify', {
+            return await request<Record<string, unknown>>('/api/blogs/subscriptions/verify', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -550,7 +550,7 @@ export const blogApi = {
 
     async unsubscribe(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/blogs/subscriptions/unsubscribe', {
+            return await request<Record<string, unknown>>('/api/blogs/subscriptions/unsubscribe', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -571,7 +571,7 @@ export const adminApi = {
     async getAdminBlogs(params?: QueryRecord) {
         try {
             return await request<{ content: AdminBlog[]; page: number; totalPages: number; totalElements: number }>(
-                `/admin/blogs${toQueryString(params)}`,
+                `/admin/api/blogs${toQueryString(params)}`,
                 { method: 'GET' }
             );
         } catch {
@@ -601,7 +601,7 @@ export const adminApi = {
     async getPendingComments(params?: QueryRecord) {
         try {
             return await request<{ content: AdminComment[]; page: number; totalPages: number; totalElements: number }>(
-                `/admin/comments/pending${toQueryString(params)}`,
+                `/admin/api/comments/pending${toQueryString(params)}`,
                 { method: 'GET' }
             );
         } catch {
@@ -614,7 +614,7 @@ export const adminApi = {
 
     async approveBlog(id: number | string, payload?: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>(`/admin/blogs/${id}/approve`, {
+            return await request<Record<string, unknown>>(`/admin/api/blogs/${id}/approve`, {
                 method: 'POST',
                 body: JSON.stringify(payload || {}),
             });
@@ -627,7 +627,7 @@ export const adminApi = {
 
     async rejectBlog(id: number | string, payload?: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>(`/admin/blogs/${id}/reject`, {
+            return await request<Record<string, unknown>>(`/admin/api/blogs/${id}/reject`, {
                 method: 'POST',
                 body: JSON.stringify(payload || {}),
             });
@@ -640,7 +640,7 @@ export const adminApi = {
 
     async editBlog(id: number | string, payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>(`/admin/blogs/${id}`, {
+            return await request<Record<string, unknown>>(`/admin/api/blogs/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify(payload),
             });
@@ -653,16 +653,49 @@ export const adminApi = {
 
     async deleteBlog(id: number | string) {
         try {
-            return await request<Record<string, unknown>>(`/admin/blogs/${id}`, { method: 'DELETE' });
+            return await request<Record<string, unknown>>(`/admin/api/blogs/${id}`, { method: 'DELETE' });
         } catch {
             setAdminBlogsStore(getAdminBlogsStore().filter((blog) => blog.id !== Number(id)));
             return { data: { success: true } };
         }
     },
 
+    async getAllComments(params?: QueryRecord) {
+        try {
+            return await request<{ content: AdminComment[]; page: number; totalPages: number; totalElements: number }>(
+                `/admin/api/comments/all${toQueryString(params)}`,
+                { method: 'GET' }
+            );
+        } catch {
+            const page = Number(params?.page ?? 0);
+            const size = Number(params?.size ?? 10);
+            const comments = getCommentsStore();
+            return { data: paginateList(comments, page, size) };
+        }
+    },
+
+    async approveComment(id: number | string) {
+        try {
+            return await request<Record<string, unknown>>(`/admin/api/comments/${id}/approve`, { method: 'POST' });
+        } catch {
+            return { data: { success: true } };
+        }
+    },
+
+    async editComment(id: number | string, commentText: string) {
+        try {
+            return await request<Record<string, unknown>>(`/admin/api/comments/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ commentText }),
+            });
+        } catch {
+            return { data: { success: true } };
+        }
+    },
+
     async deleteComment(id: number | string) {
         try {
-            return await request<Record<string, unknown>>(`/admin/comments/${id}`, { method: 'DELETE' });
+            return await request<Record<string, unknown>>(`/admin/api/comments/${id}`, { method: 'DELETE' });
         } catch {
             const nextComments = getCommentsStore().filter((comment) => comment.id !== Number(id));
             setCommentsStore(nextComments);
