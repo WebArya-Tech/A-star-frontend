@@ -25,12 +25,48 @@ export const SubscribePage = () => {
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('subscribe');
     const [loading, setLoading] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (resendTimer > 0) {
+            interval = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const handleSubscribe = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault(); setLoading(true);
-        try { await blogApi.startSubscription({ email }); toast.success('OTP sent to your email! (Dev: 123456)'); setStep('verify'); }
+        try { 
+            await blogApi.startSubscription({ email }); 
+            toast.success('OTP sent to your email!'); 
+            setStep('verify'); 
+            setResendTimer(300); // 5 minutes
+        }
         catch (err) { toast.error(getApiErrorMessage(err, 'Failed')); }
         finally { setLoading(false); }
+    };
+
+    const handleResendOtp = async () => {
+        if (resendTimer > 0) return;
+        setLoading(true);
+        try {
+            await blogApi.startSubscription({ email });
+            toast.success('OTP resent successfully!');
+            setResendTimer(300); // 5 minutes
+        } catch (err) {
+            toast.error(getApiErrorMessage(err, 'Failed to resend OTP'));
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleVerify = async (e: FormEvent<HTMLFormElement>) => {
@@ -106,10 +142,27 @@ export const SubscribePage = () => {
                     <Mail className="w-10 h-10 mx-auto text-text-tertiary mb-3" />
                     <h2 className="text-lg font-bold text-text-primary mb-1">Verify Your Email</h2>
                     <p className="text-text-secondary text-sm mb-2">Enter OTP sent to <strong>{email}</strong></p>
-                    {/* <p className="text-xs text-text-tertiary mb-5 bg-bg-secondary rounded p-2">📌 Dev OTP: <strong>123456</strong></p> */}
+                    {/* OTP verification message */}
                     <form onSubmit={handleVerify} className="max-w-xs mx-auto space-y-4">
-                        <Input placeholder="Enter OTP" value={otp} onChange={(e: ChangeEvent<HTMLInputElement>) => setOtp(e.target.value)} className="text-center text-xl tracking-widest" maxLength={6} required />
+                        <Input 
+                            placeholder="Enter OTP" 
+                            value={otp} 
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} 
+                            className="text-center text-xl tracking-widest" 
+                            maxLength={6} 
+                            required 
+                        />
                         <Button type="submit" disabled={loading} className="w-full">{loading ? 'Verifying...' : 'Verify & Activate'}</Button>
+                        <div className="text-center">
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                disabled={loading || resendTimer > 0}
+                                className={`text-sm font-semibold transition-colors ${resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-[#19788f] hover:text-[#166b7f] underline'}`}
+                            >
+                                {resendTimer > 0 ? `Resend OTP in ${formatTime(resendTimer)}` : 'Resend OTP'}
+                            </button>
+                        </div>
                         <button type="button" onClick={() => setStep('subscribe')} className="w-full pt-2 text-sm text-text-tertiary hover:text-text-primary font-medium flex items-center justify-center gap-1 transition-colors">
                             <ArrowLeft className="w-4 h-4" /> Back to Subscribe
                         </button>

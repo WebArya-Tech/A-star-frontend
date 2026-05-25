@@ -1,5 +1,8 @@
 import api from './api';
 
+const ADMIN_AUTH_BASE_URL = '/api/admin/auth';
+const USER_AUTH_BASE_URL = '/api/auth';
+
 /**
  * User Journey (OTP Login)
  */
@@ -7,7 +10,7 @@ import api from './api';
 // Step 1: Request OTP
 export const requestUserOTP = async (email, isResend = false) => {
   try {
-    const response = await api.post('/api/auth/start', { email, isResend });
+    const response = await api.post(`${USER_AUTH_BASE_URL}/start`, { email, isResend });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -18,11 +21,50 @@ export const requestUserOTP = async (email, isResend = false) => {
 export const verifyUserOTP = async (data) => {
   try {
     // data: { email, otp, name (opt), mobile (opt) }
-    const response = await api.post('/api/auth/verify', data);
+    const response = await api.post(`${USER_AUTH_BASE_URL}/verify`, data);
     if (response.data.token) {
       localStorage.setItem('icfy_token', response.data.token);
       localStorage.setItem('icfy_user', JSON.stringify(response.data.user));
     }
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * User Journey (Email/Password)
+ */
+
+// User Login with Password
+export const loginWithPassword = async (email, password) => {
+  try {
+    const response = await api.post(`${USER_AUTH_BASE_URL}/login-password`, { email, password });
+    if (response.data.token) {
+      localStorage.setItem('icfy_token', response.data.token);
+      localStorage.setItem('icfy_user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// User Forgot Password (Request OTP)
+export const userForgotPassword = async (email) => {
+  try {
+    const response = await api.post(`${USER_AUTH_BASE_URL}/forgot-password`, { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// User Reset Password
+export const userResetPassword = async (data) => {
+  try {
+    // data: { email, otp, newPassword }
+    const response = await api.post(`${USER_AUTH_BASE_URL}/reset-password`, data);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -36,10 +78,12 @@ export const verifyUserOTP = async (data) => {
 // Admin Login
 export const adminLogin = async (email, password) => {
   try {
-    const response = await api.post('/api/admin/auth/login', { email, password });
+    const response = await api.post(`${ADMIN_AUTH_BASE_URL}/login`, { email, password });
     if (response.data.token) {
       localStorage.setItem('icfy_token', response.data.token);
+      localStorage.setItem('icfy_user', JSON.stringify(response.data.user));
       localStorage.setItem('icfy_role', 'admin');
+      localStorage.setItem('adminAuth', 'true');
     }
     return response.data;
   } catch (error) {
@@ -50,7 +94,7 @@ export const adminLogin = async (email, password) => {
 // Admin Login OTP (Request)
 export const requestAdminLoginOTP = async (email) => {
   try {
-    const response = await api.post('/api/admin/auth/login-otp/request', { email });
+    const response = await api.post(`${ADMIN_AUTH_BASE_URL}/login/otp/request`, { email });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -61,10 +105,12 @@ export const requestAdminLoginOTP = async (email) => {
 export const verifyAdminLoginOTP = async (data) => {
   try {
     // data: { email, otp }
-    const response = await api.post('/api/admin/auth/login-otp/verify', data);
+    const response = await api.post(`${ADMIN_AUTH_BASE_URL}/login/otp/verify`, data);
     if (response.data.token) {
       localStorage.setItem('icfy_token', response.data.token);
+      localStorage.setItem('icfy_user', JSON.stringify(response.data.user));
       localStorage.setItem('icfy_role', 'admin');
+      localStorage.setItem('adminAuth', 'true');
     }
     return response.data;
   } catch (error) {
@@ -75,7 +121,7 @@ export const verifyAdminLoginOTP = async (data) => {
 // Admin Forgot Password (Request OTP)
 export const adminForgotPassword = async (email) => {
   try {
-    const response = await api.post('/api/admin/auth/forgot-password', { email });
+    const response = await api.post(`${ADMIN_AUTH_BASE_URL}/forgot-password`, { email });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -86,7 +132,7 @@ export const adminForgotPassword = async (email) => {
 export const adminResetPassword = async (data) => {
   try {
     // data: { email, otp, newPassword }
-    const response = await api.post('/api/admin/auth/reset-password', data);
+    const response = await api.post(`${ADMIN_AUTH_BASE_URL}/reset-password`, data);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

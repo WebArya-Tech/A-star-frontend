@@ -16,10 +16,6 @@ class ApiError extends Error {
     }
 }
 
-const FORCE_LOCAL_BLOG_API = String(import.meta.env.VITE_USE_LOCAL_BLOG_API || '').toLowerCase() === 'true';
-const HAS_REMOTE_BASE = Boolean(import.meta.env.VITE_API_BASE_URL);
-const USE_LOCAL_MODE = FORCE_LOCAL_BLOG_API || (import.meta.env.DEV && !HAS_REMOTE_BASE);
-
 const ADMIN_BLOGS_STORAGE_KEY = 'icfy_admin_blogs';
 const ADMIN_SUBSCRIBERS_STORAGE_KEY = 'icfy_admin_subscribers';
 const ADMIN_COMMENTS_STORAGE_KEY = 'icfy_admin_comments';
@@ -254,19 +250,51 @@ function toQueryString(query?: QueryRecord): string {
     return qs ? `?${qs}` : '';
 }
 
+const FORCE_LOCAL_BLOG_API = String(import.meta.env.VITE_USE_LOCAL_BLOG_API || '').toLowerCase() === 'true';
+const HAS_REMOTE_BASE = Boolean(import.meta.env.VITE_API_BASE_URL);
+
+// Persistent local mode flag for the session if a remote call fails
+const SESSION_LOCAL_FLAG = 'icfy_blog_session_local';
+
+function getInitialLocalMode() {
+    if (FORCE_LOCAL_BLOG_API) return true;
+    if (typeof window !== 'undefined' && sessionStorage.getItem(SESSION_LOCAL_FLAG) === 'true') return true;
+    return (import.meta.env.DEV && !HAS_REMOTE_BASE);
+}
+
+let isSessionLocalMode = getInitialLocalMode();
+
+export function setSessionLocalMode(value: boolean) {
+    isSessionLocalMode = value;
+    if (typeof window !== 'undefined') {
+        if (value) {
+            sessionStorage.setItem(SESSION_LOCAL_FLAG, 'true');
+        } else {
+            sessionStorage.removeItem(SESSION_LOCAL_FLAG);
+        }
+    }
+}
+
+export function getIsLocalMode() {
+    return FORCE_LOCAL_BLOG_API;
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<ApiEnvelope<T>> {
-    if (USE_LOCAL_MODE) {
-        throw new ApiError('Local blog API mode enabled', 503, { path, mode: 'local' });
+    if (getIsLocalMode()) {
+        throw new ApiError('Local blog API mode active', 503, { path, mode: 'local' });
     }
 
     const candidatePaths = path.startsWith('/api/') ? [path] : [path, `/api${path}`];
     let lastError: ApiError | null = null;
 
+    console.log(`[BlogAPI] Requesting ${path}...`);
+
     for (const baseUrl of getApiBaseCandidates()) {
         for (const candidatePath of candidatePaths) {
+            const fullUrl = `${baseUrl}${candidatePath}`;
             let response: Response;
             try {
-                response = await fetch(`${baseUrl}${candidatePath}`, {
+                response = await fetch(fullUrl, {
                     headers: {
                         'Content-Type': 'application/json',
                         ...(localStorage.getItem('icfy_token') && {
@@ -278,6 +306,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<ApiEnvel
                 });
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Network error';
+                console.warn(`[BlogAPI] Network error for ${fullUrl}:`, message);
                 lastError = new ApiError(message, 0, { baseUrl, candidatePath });
                 continue;
             }
@@ -287,9 +316,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<ApiEnvel
             const payload = hasJson ? await response.json() : null;
 
             if (response.ok) {
+                console.log(`[BlogAPI] Success: ${fullUrl}`);
                 setActiveApiBaseUrl(baseUrl);
                 return { data: (payload ?? ({} as T)) as T };
             }
+
+            console.warn(`[BlogAPI] Status ${response.status} for ${fullUrl}`, payload);
 
             const message =
                 (payload as { message?: string } | null)?.message ||
@@ -303,6 +335,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<ApiEnvel
             throw lastError;
         }
     }
+
 
     throw lastError || new ApiError('Request failed', 500);
 }

@@ -14,6 +14,7 @@ import FeedbackManagement from './FeedbackManagement'
 import PracticeTestManagement from './PracticeTestManagement'
 import HomeworkManagement from './HomeworkManagement'
 import TestimonialManagement from './TestimonialManagement'
+import ReviewManagement from './ReviewManagement'
 import TutorManagement from './TutorManagement'
 import AnnouncementManagement from './AnnouncementManagement'
 import { BlogModerationPage } from './BlogModerationPage'
@@ -23,6 +24,7 @@ import BlogDashboard from './BlogDashboard'
 import AdminProfile from './AdminProfile'
 import AdminNotifications from './AdminNotifications'
 import ContactRequests from './ContactRequests'
+import CategoryManagement from './CategoryManagement'
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, isLoading, isAdmin } = useAuth()
@@ -82,6 +84,10 @@ export default function AdminDashboard() {
         return <FeedbackManagement />
       case 'testimonials':
         return <TestimonialManagement />
+      case 'reviews':
+        return <ReviewManagement />
+      case 'categories':
+        return <CategoryManagement />
       case 'tutors':
         return <TutorManagement />
       case 'announcements':
@@ -153,10 +159,11 @@ export default function AdminDashboard() {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       />
-      <div className="flex">
+      {/* Main Content Container */}
+      <div className="flex w-full overflow-x-hidden">
         {/* Main Content */}
-        <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
-          <div className="p-4 md:p-6">
+        <main className={`flex-1 min-w-0 transition-all duration-300 ${sidebarOpen ? 'lg:pl-64' : ''}`}>
+          <div className="p-4 md:p-6 max-w-full overflow-x-hidden">
             {renderView()}
           </div>
         </main>

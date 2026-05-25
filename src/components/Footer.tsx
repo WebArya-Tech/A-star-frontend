@@ -31,28 +31,44 @@ const Footer = () => {
               Expert online coaching for IGCSE & AS/A Level students. Achieve top grades with personalized instruction,
               comprehensive resources, and proven teaching methodologies.
             </p>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-yellow-400" />
-                <a href="tel:+918861919000" className="hover:text-yellow-400 transition-colors">
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 flex justify-center mt-1 shrink-0">
+                  <Phone className="h-5 w-5 text-yellow-400" />
+                </div>
+                <a href="tel:+91-886 191 9000" className="hover:text-yellow-400 transition-colors leading-relaxed">
                   +91-886 191 9000
                 </a>
               </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-yellow-400" />
-                <a href="mailto:astarclasses@ixpoe.com" className="hover:text-yellow-400 transition-colors">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 flex justify-center mt-1 shrink-0">
+                  <FaWhatsapp className="h-5 w-5 text-yellow-400" />
+                </div>
+                <a href="https://wa.me/918073982848" target="_blank" rel="noopener noreferrer" className="hover:text-yellow-400 transition-colors leading-relaxed">
+                  +91-807 398 2848
+                </a>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-6 flex justify-center mt-1 shrink-0">
+                  <Mail className="h-5 w-5 text-yellow-400" />
+                </div>
+                <a href="mailto:astarclasses@ixpoe.com" className="hover:text-yellow-400 transition-colors leading-relaxed">
                   astarclasses@ixpoe.com
                 </a>
               </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-4 w-4 text-yellow-400" />
-                <span className="text-gray-300">No. 81, Ground Floor, Shar Space, Borewell Road, Nallurahalli, Whitefield, Bangalore - 560066, Karnataka</span>
+              <div className="flex items-start space-x-3">
+                <div className="w-6 flex justify-center mt-1 shrink-0">
+                  <MapPin className="h-5 w-5 text-yellow-400 shrink-0" />
+                </div>
+                <span className="text-gray-300 leading-relaxed">No. 81, Ground Floor, Share Space, Borewell Road, Nallurahalli, Whitefield, Bangalore - 560066, Karnataka</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <FileText className="h-4 w-4 text-yellow-400" />
+              <div className="flex items-start space-x-3">
+                <div className="w-6 flex justify-center mt-1 shrink-0">
+                  <FileText className="h-5 w-5 text-yellow-400" />
+                </div>
                 <button
                   onClick={() => setIsGstModalOpen(true)}
-                  className="text-gray-300 hover:text-yellow-400 transition-colors text-left"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-left leading-relaxed"
                 >
                   GST Number: 29AAECD7872Q1ZO
                 </button>
@@ -69,6 +85,16 @@ const Footer = () => {
               <li><Link to="/as-a-level" className="text-gray-300 hover:text-yellow-400 transition-colors">AS/A Level</Link></li>
               <li><Link to="/testimonials" className="text-gray-300 hover:text-yellow-400 transition-colors">Testimonials</Link></li>
               <li><Link to="/tutors" className="text-gray-300 hover:text-yellow-400 transition-colors">Tutors</Link></li>
+              <li>
+                <a 
+                  href="https://www.ixpoe.com/ixpoe/feepay" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-yellow-400 font-bold hover:text-yellow-300 transition-colors"
+                >
+                  Pay Fees Online
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -180,7 +206,7 @@ const Footer = () => {
                 </div>
 
                 <div className="space-y-1 text-sm leading-relaxed border-t border-gray-100 pt-4">
-                  <p>No. 81, Ground Floor, Shar Space</p>
+                  <p>No. 81, Ground Floor, Share Space</p>
                   <p>Borewell Road, Nallurahalli, Whitefield</p>
                   <p>Bangalore - 560066</p>
                   <p>Karnataka</p>
@@ -193,10 +219,10 @@ const Footer = () => {
                   <p className="text-lg font-mono font-bold text-blue-900">29AAECD7872Q1ZO</p>
                 </div>
 
-                <div className="flex items-center space-x-2 pt-2">
+                <a href="tel:+918861919000" className="flex items-center space-x-2 pt-2 hover:text-blue-600 transition-colors">
                   <Phone className="h-4 w-4 text-blue-600" />
                   <span className="text-gray-700 font-medium">+91-886 191 9000</span>
-                </div>
+                </a>
               </div>
 
               {/* Modal Footer */}

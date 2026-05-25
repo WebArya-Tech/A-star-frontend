@@ -45,7 +45,7 @@ const cardBackgrounds = [
   new URL('../assets/card6.jpeg', import.meta.url).href,
   new URL('../assets/card7.jpeg', import.meta.url).href,
   new URL('../assets/card8.jpeg', import.meta.url).href,
-  new URL('../assets/card9jpeg.jpeg', import.meta.url).href,
+  new URL('../assets/card9.jpeg', import.meta.url).href,
   new URL('../assets/card10PM.jpeg', import.meta.url).href,
 ];
 
@@ -141,18 +141,24 @@ const Testimonials = () => {
   );
 
   const filteredTestimonials = useMemo(() => {
-    return testimonials.filter((t) => {
+    let filtered = testimonials.filter((t) => {
       const categoryMatch = selectedCategory === 'All' || t.category === selectedCategory;
       const typeMatch = selectedType === 'All' || t.type === selectedType;
-      const isNotPrimary = !t.primary;
-      return categoryMatch && typeMatch && isNotPrimary;
+      return categoryMatch && typeMatch;
     });
-  }, [testimonials, selectedCategory, selectedType]);
+
+    // Explicitly remove the primary testimonial from the filtered list if it exists
+    if (primaryTestimonial) {
+      filtered = filtered.filter(t => t.id !== primaryTestimonial.id && t._id !== primaryTestimonial._id);
+    }
+    
+    return filtered;
+  }, [testimonials, selectedCategory, selectedType, primaryTestimonial]);
 
   const paginatedTestimonials = filteredTestimonials.slice(0, visibleCount);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-fuchsia-50">
+    <div className="min-h-screen bg-white">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
@@ -169,7 +175,63 @@ const Testimonials = () => {
         }
       `}</style>
 
-      {/* Primary Testimonial Banner Removed */}
+      {/* Primary Testimonial Featured Section */}
+      {primaryTestimonial && (
+        <section className="pt-20 pb-10 bg-gradient-to-b from-blue-50 to-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-blue-100 flex flex-col md:flex-row items-stretch">
+              <div className="md:w-1/3 bg-blue-900 p-12 text-white flex flex-col justify-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/20 rounded-full -ml-12 -mb-12 blur-xl"></div>
+                
+                <div className="relative z-10">
+                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
+                    <Star className="text-[#ffb800] fill-[#ffb800]" size={32} />
+                  </div>
+                  <h2 className="text-3xl font-black mb-2 uppercase tracking-tight leading-none">Featured Story</h2>
+                  <p className="text-blue-100 font-bold opacity-80 uppercase tracking-widest text-xs">A Star Achievement</p>
+                </div>
+              </div>
+              
+              <div className="md:w-2/3 p-12 flex flex-col justify-center">
+                <div className="flex items-center gap-1 mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={18} className="fill-[#ffb800] text-[#ffb800]" />
+                  ))}
+                  <span className="ml-3 text-sm font-black text-blue-900 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wider">5/5 Rating</span>
+                </div>
+                
+                <blockquote className="text-2xl font-bold text-gray-900 mb-8 leading-tight italic">
+                  "{primaryTestimonial.text || primaryTestimonial.quote || primaryTestimonial.message || primaryTestimonial.content}"
+                </blockquote>
+                
+                <div className="flex items-center justify-between mt-auto pt-8 border-t border-gray-100">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-900 font-black text-xl shadow-inner">
+                      {(primaryTestimonial.name || primaryTestimonial.reviewerName || 'S')[0]}
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-gray-900 leading-none">
+                        {primaryTestimonial.name || primaryTestimonial.reviewerName}
+                      </h4>
+                      <p className="text-blue-600 font-bold text-sm mt-1 uppercase tracking-widest">
+                        {primaryTestimonial.role || primaryTestimonial.category || 'Student'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setActive(primaryTestimonial)}
+                    className="px-8 py-3 bg-blue-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-800 transition-all shadow-lg shadow-blue-900/20 active:scale-95"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Main Grid */}
       <section className="py-20">
@@ -190,17 +252,17 @@ const Testimonials = () => {
                   Student Testimonials
                 </h1>
                 <div className="h-1.5 w-24 bg-indigo-600 mx-auto rounded-full"></div>
-                <p className="mt-6 text-lg text-gray-600">
+                <p className="mt-6 text-lg text-black font-bold">
                   Explore real stories from IGCSE and AS/A Level students and parents.
                 </p>
               </div>
 
               {/* Authenticity Statement */}
-              <div className="max-w-4xl mx-auto mb-12">
-                <p className="text-sm text-gray-800 mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
-                  <span className="font-semibold">Dear Parents and Students,</span> Trust and authenticity are at the heart of everything we do. All testimonials displayed here are 100% genuine and have been provided by real students and parents. None of them is AI-generated, fake, edited, or modified in any manner.
+              <div className="max-w-4xl mx-auto mb-12 p-6 bg-blue-50 rounded-xl shadow-md border border-blue-100">
+                <p className="text-base text-blue-900 leading-relaxed mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
+                  <span className="font-bold">Dear Parents and Students,</span> Trust and authenticity are at the heart of everything we do. All testimonials displayed here are 100% genuine and have been provided by real students and parents. None of them is AI-generated, fake, edited, or modified in any manner.
                 </p>
-                <p className="text-sm text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                <p className="text-base text-blue-900 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
                   We invite you to click on each testimonial to view the original feedback. We also welcome any further verification to reassure you of the authenticity of every testimonial shared here.
                 </p>
               </div>
@@ -217,20 +279,40 @@ const Testimonials = () => {
                   if (studentName.toLowerCase().includes('sanjana')) {
                     testimonialText = "Thank you so much Sir! You have really had a huge impact on her life - especially her interest in Math and especially Stats! She hopes to pursue these in college.";
                   } else if (studentName.toLowerCase().includes('amrit')) {
-                    testimonialText = "Poonam Kumar: Thanks Rohit. You'll be happy to know that Amrit got an A on his most recent midterm. Thanks much for your hard work with him. Any hw for this week? Sanjeev Kumar: Yes. Amrit scored well above the average. Let's keep with the drill...";
+                    testimonialText = "We're happy to share that Amrit scored an A in his recent mid-term exams. Thank you for your dedication and hard work—your guidance has truly made a difference!\n\n— Ms. Poonam and Sanjeev Kumar, parents of Amrit IGCSE X grade Math and Physics studied in A Star from 8th to 12th grade)";
                   } else if (testimonial.content && testimonial.content.startsWith('http')) {
                     // Fallback for old data that might still use `content` for a URL
                     testimonialText = `Outstanding success in ${testimonial.subject || 'studies'}! Click to see the full ${testimonial.type} testimonial and detailed feedback.`;
                   }
 
                   // Determine media type for the icon
-                  const mediaUrl = testimonial.mediaUrl || testimonial.content;
+                  let mediaUrl = testimonial.mediaUrl || testimonial.content || testimonial.image;
+                  
+                  // Fallback for specific students if media is missing
+                  if (!mediaUrl) {
+                    if (studentName.toLowerCase().includes('sanjana')) mediaUrl = whatsappImageUrls.sanjana;
+                    else if (studentName.toLowerCase().includes('amrit')) mediaUrl = whatsappImageUrls.amrit;
+                    else if (studentName.toLowerCase().includes('rithika')) mediaUrl = whatsappImageUrls.rithika;
+                    else if (studentName.toLowerCase().includes('mahi') || studentName.toLowerCase().includes('ria')) mediaUrl = whatsappImageUrls.mahiRia;
+                    else if (studentName.toLowerCase().includes('pradyumna')) mediaUrl = whatsappImageUrls.pradyumna;
+                    else if (studentName.toLowerCase().includes('rhea') || studentName.toLowerCase().includes('thea') || studentName.toLowerCase().includes('ojal')) mediaUrl = whatsappImageUrls.rheaTheaOjal;
+                    else if (studentName.toLowerCase().includes('siddhant')) {
+                        if (testimonial.subject?.toLowerCase().includes('physics') || testimonial.subject?.toLowerCase().includes('chemistry')) mediaUrl = whatsappImageUrls.siddhantPC;
+                        else mediaUrl = whatsappImageUrls.siddhantML;
+                    }
+                    else if (studentName.toLowerCase().includes('thanya')) mediaUrl = whatsappImageUrls.thanya;
+                  }
+
                   let mediaType = testimonial.type || 'text';
                   if (mediaUrl) {
-                    if (mediaUrl.match(/\.(mp4|webm|mov)$/i)) mediaType = 'video';
-                    else if (mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaType = 'audio';
-                    else if (mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) mediaType = 'image';
-                    else if (mediaUrl.match(/\.pdf$/i)) mediaType = 'pdf';
+                    if (typeof mediaUrl === 'string') {
+                      if (mediaUrl.match(/\.(mp4|webm|mov)$/i)) mediaType = 'video';
+                      else if (mediaUrl.match(/\.(mp3|wav|ogg)$/i)) mediaType = 'audio';
+                      else if (mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) mediaType = 'image';
+                      else if (mediaUrl.match(/\.pdf$/i)) mediaType = 'pdf';
+                    } else {
+                      mediaType = 'image'; // URL objects or other imports
+                    }
                   }
 
                   return (
@@ -240,21 +322,18 @@ const Testimonials = () => {
                       onClick={() => setActive(testimonial)}
                       className="group relative flex flex-col w-full rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.03] text-left shadow-2xl aspect-[4/5]"
                     >
-                      {/* Background Image with Overlay */}
-                      <div className="absolute inset-0">
-                        <img
-                          src={cardBackgrounds[index % cardBackgrounds.length]}
-                          alt="Card background"
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#002B5B] via-[#002B5B]/80 to-transparent opacity-90"></div>
-                        <div className="absolute inset-0 border-[8px] border-[#FF6B6B]/20 group-hover:border-[#FF6B6B]/40 transition-colors duration-300"></div>
+                      {/* Background Image - Clean & Original Colors */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-700"
+                        style={{ backgroundImage: `url(${cardBackgrounds[index % cardBackgrounds.length]})` }}
+                      >
+                        {/* No dark overlay, blue tint, or blur here */}
                       </div>
 
                       {/* Content Overlay */}
                       <div className="relative h-full flex flex-col p-6 pb-4 justify-between z-10">
-                        {/* Media Icon Indicator */}
-                        <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:bg-[#FF6B6B] group-hover:border-[#FF6B6B] transition-all duration-300">
+                        {/* Media Icon Indicator - Subtle Glassmorphism for readability */}
+                        <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center border border-white/20 group-hover:bg-[#FF6B6B] group-hover:border-[#FF6B6B] transition-all duration-300">
                           {mediaType === 'video' && <Video size={18} className="text-white" />}
                           {mediaType === 'audio' && <Headphones size={18} className="text-white" />}
                           {mediaType === 'whatsapp' && <MessageCircle size={18} className="text-white" />}
@@ -262,20 +341,20 @@ const Testimonials = () => {
                           {mediaType === 'pdf' && <FileText size={18} className="text-white" />}
                         </div>
 
-                        {/* Top Quote Icon */}
-                        <div className="text-[#FF6B6B] opacity-60">
+                        {/* Top Quote Icon - More visible against original image */}
+                        <div className="text-[#FF6B6B] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                           <span className="text-5xl font-serif leading-none">&ldquo;</span>
                         </div>
 
-                        {/* Testimonial Text with Scroll */}
+                        {/* Testimonial Text with Scroll - Subtle shadow for readability on any image */}
                         <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar scroll-smooth my-4">
-                          <div className="text-white text-base md:text-lg font-bold italic leading-relaxed drop-shadow-sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                          <div className="text-white text-base md:text-lg font-black italic leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                             {linkifyText(testimonialText)}
                           </div>
                         </div>
 
                         {/* Bottom Quote Icon */}
-                        <div className="text-[#FF6B6B] opacity-60 flex justify-end">
+                        <div className="text-[#FF6B6B] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] flex justify-end">
                           <span className="text-5xl font-serif leading-none rotate-180 inline-block">&ldquo;</span>
                         </div>
                       </div>
@@ -327,65 +406,89 @@ const Testimonials = () => {
 
               {/* Evidence Content Only */}
               <div className="w-full h-full overflow-hidden rounded-3xl shadow-2xl bg-white border-4 border-[#FF6B6B]">
-                {active.mediaUrl || active.image || (active.content && active.content.startsWith('http')) ? (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-900 min-h-[400px]">
-                    {(() => {
-                      const url = active.mediaUrl || active.image || active.content;
-                      if (url.match(/\.(mp4|webm|mov)$/i)) {
-                        return (
-                          <div className="relative w-full aspect-video">
-                            <iframe
-                              src={url}
-                              title="Video evidence"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              className="absolute inset-0 w-full h-full"
-                            />
-                          </div>
-                        );
-                      } else if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                        return (
-                          <img
-                            src={url}
-                            alt="Evidence"
-                            className="max-w-full max-h-[80vh] object-contain"
-                          />
-                        );
-                      } else if (url.match(/\.pdf$/i)) {
-                        return (
-                          <iframe
-                            src={url}
-                            title="PDF evidence"
-                            className="w-full h-[80vh]"
-                          />
-                        );
-                      } else if (url.match(/\.(mp3|wav|ogg)$/i)) {
-                        return (
-                          <div className="p-12 w-full max-w-lg bg-white rounded-2xl">
-                            <h3 className="text-xl font-black text-[#002B5B] mb-6 text-center uppercase tracking-widest">Audio Evidence</h3>
-                            <audio controls src={url} className="w-full" />
-                          </div>
-                        );
-                      }
-                      return (
-                        <div className="p-12 text-white text-center">
-                          <p className="text-xl font-bold">Media Evidence Not Found</p>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                ) : (
-                  <div className="p-20 text-center bg-white">
-                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <FileText size={40} className="text-blue-600" />
+                {(() => {
+                  let url = active.mediaUrl || active.image || active.content;
+                  const studentName = active.name || active.reviewerName || '';
+
+                  // Apply same fallbacks in modal
+                  if (!url || (typeof url === 'string' && !url.startsWith('http') && !url.includes('/assets/'))) {
+                    if (studentName.toLowerCase().includes('sanjana')) url = whatsappImageUrls.sanjana;
+                    else if (studentName.toLowerCase().includes('amrit')) url = whatsappImageUrls.amrit;
+                    else if (studentName.toLowerCase().includes('rithika')) url = whatsappImageUrls.rithika;
+                    else if (studentName.toLowerCase().includes('mahi') || studentName.toLowerCase().includes('ria')) url = whatsappImageUrls.mahiRia;
+                    else if (studentName.toLowerCase().includes('pradyumna')) url = whatsappImageUrls.pradyumna;
+                    else if (studentName.toLowerCase().includes('rhea') || studentName.toLowerCase().includes('thea') || studentName.toLowerCase().includes('ojal')) url = whatsappImageUrls.rheaTheaOjal;
+                    else if (studentName.toLowerCase().includes('siddhant')) {
+                        if (active.subject?.toLowerCase().includes('physics') || active.subject?.toLowerCase().includes('chemistry')) url = whatsappImageUrls.siddhantPC;
+                        else url = whatsappImageUrls.siddhantML;
+                    }
+                    else if (studentName.toLowerCase().includes('thanya')) url = whatsappImageUrls.thanya;
+                  }
+
+                  if (url && (typeof url !== 'string' || url.startsWith('http') || url.includes('/assets/') || url.match(/\.(mp4|webm|mov|jpg|jpeg|png|gif|webp|pdf|mp3|wav|ogg)$/i))) {
+                    return (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-900 min-h-[400px]">
+                        {(() => {
+                          const urlStr = typeof url === 'string' ? url : String(url);
+                          if (urlStr.match(/\.(mp4|webm|mov)$/i)) {
+                            return (
+                              <div className="relative w-full aspect-video">
+                                <iframe
+                                  src={urlStr}
+                                  title="Video evidence"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                  className="absolute inset-0 w-full h-full"
+                                />
+                              </div>
+                            );
+                          } else if (urlStr.match(/\.(jpg|jpeg|png|gif|webp)$/i) || !urlStr.includes('.')) {
+                            return (
+                              <img
+                                src={urlStr}
+                                alt="Evidence"
+                                className="max-w-full max-h-[80vh] object-contain"
+                              />
+                            );
+                          } else if (urlStr.match(/\.pdf$/i)) {
+                            return (
+                              <iframe
+                                src={urlStr}
+                                title="PDF evidence"
+                                className="w-full h-[80vh]"
+                              />
+                            );
+                          } else if (urlStr.match(/\.(mp3|wav|ogg)$/i)) {
+                            return (
+                              <div className="p-12 w-full max-w-lg bg-white rounded-2xl">
+                                <h3 className="text-xl font-black text-[#002B5B] mb-6 text-center uppercase tracking-widest">Audio Evidence</h3>
+                                <audio controls src={urlStr} className="w-full" />
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="p-12 text-white text-center">
+                              <p className="text-xl font-bold">Media Evidence Not Found</p>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="p-20 text-center bg-white">
+                      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <FileText size={40} className="text-blue-600" />
+                      </div>
+                      <h3 className="text-2xl font-black text-gray-900 mb-2">Evidence for {active.name || active.reviewerName}</h3>
+                      <p className="text-gray-500 mb-6">This testimonial consists of the verified text shown on the card.</p>
+                      <div className="text-left text-gray-800 whitespace-pre-wrap break-words leading-relaxed font-medium">
+                        {linkifyText(active.text || active.quote || active.message || active.content || 'No testimonial text available.')}
+                      </div>
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 mb-2">Evidence for {active.name || active.reviewerName}</h3>
-                    <p className="text-gray-500 mb-6">This testimonial consists of the verified text shown on the card.</p>
-                    <div className="text-left text-gray-800 whitespace-pre-wrap break-words leading-relaxed font-medium">
-                      {linkifyText(active.text || active.quote || active.message || active.content || 'No testimonial text available.')}
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               <p className="mt-6 text-white/60 text-sm font-bold uppercase tracking-[0.4em]">
@@ -414,7 +517,7 @@ const Testimonials = () => {
               Submit Your Story
             </button>
             <button
-              onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
               className="border-2 border-white hover:bg-white hover:text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
             >
               Contact Us

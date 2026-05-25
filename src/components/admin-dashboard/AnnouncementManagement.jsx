@@ -1,8 +1,9 @@
 ﻿
 import React, { useState, useEffect } from 'react';
+import Pagination from '../ui/Pagination';
 
 const DEFAULT_ANNOUNCEMENTS = [
-  { id: 1, title: 'Welcome to A Star Classes!', message: 'We are glad to have you on board. Explore your dashboard to access courses, homework and more.', category: 'general', priority: 'medium', createdAt: '2026-02-20' },
+  { id: 1, title: 'Welcome to    iThinkLearn!', message: 'We are glad to have you on board. Explore your dashboard to access courses, homework and more.', category: 'general', priority: 'medium', createdAt: '2026-02-20' },
   { id: 2, title: 'Fee Payment Reminder', message: 'Last date for Term 2 fee payment is Feb 28, 2026. Please clear dues before the deadline.', category: 'payment', priority: 'high', createdAt: '2026-02-18' },
 ]
 
@@ -18,6 +19,12 @@ export default function AnnouncementManagement() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', message: '', category: 'general', priority: 'medium' });
   const [editId, setEditId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
+
+  const totalPages = Math.ceil(announcements.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAnnouncements = announcements.slice(startIndex, startIndex + itemsPerPage);
 
   // Save to localStorage so student dashboard Announcements.jsx can read them
   useEffect(() => { localStorage.setItem('icfy_announcements', JSON.stringify(announcements)) }, [announcements])
@@ -96,7 +103,7 @@ export default function AnnouncementManagement() {
           <div className="text-gray-600 text-center py-8">No announcements found.</div>
         ) : (
           <ul className="divide-y">
-            {announcements.map((a) => (
+            {paginatedAnnouncements.map((a) => (
               <li key={a.id} className="py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                   <div className="font-bold text-lg">{a.title}</div>
@@ -117,6 +124,14 @@ export default function AnnouncementManagement() {
             ))}
           </ul>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={announcements.length}
+          itemsPerPage={itemsPerPage}
+          alwaysShow={true}
+        />
       </div>
     </div>
   );

@@ -122,12 +122,12 @@ const SATHub = () => {
               Achieve your target scores and unlock doors to top universities worldwide.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/#demo-form"
-                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+              <button
+                onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
               >
                 Start Free Diagnostic
-              </Link>
+              </button>
               <Link
                 to="/contact?mode=direct&subject=course-inquiry#contact-form"
                 className="border-2 border-white hover:bg-white hover:text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
@@ -299,14 +299,14 @@ const SATHub = () => {
             Start your test preparation journey with a free diagnostic assessment and personalized study plan.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/#demo-form"
-              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+            <button
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
             >
               Free Diagnostic Test
-            </Link>
+            </button>
             <button
-              onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
               className="border-2 border-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
             >
               Chat with Expert

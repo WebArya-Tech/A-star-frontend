@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Globe, GraduationCap, FileText, Users, CheckCircle, MapPin, Trophy, Clock } from 'lucide-react';
 
 const CounsellingHub = () => {
+  const navigate = useNavigate();
   const regions = [
     {
       name: 'European Colleges',
@@ -108,14 +109,14 @@ const CounsellingHub = () => {
               we support your journey to top universities across the globe.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/contact"
-                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+              <button
+                onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
               >
                 Book Free Consultation
-              </Link>
+              </button>
               <button
-                onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+                onClick={() => window.open('https://wa.me/918073982848', '_blank')}
                 className="border-2 border-white hover:bg-white hover:text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
               >
                 WhatsApp Counselor
@@ -283,18 +284,18 @@ const CounsellingHub = () => {
             Book a free consultation with our expert counselors and take the first step towards your dream university.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/contact"
-              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+            <button
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
             >
               Book Free Consultation
-            </Link>
-            <Link
-              to="/demoform"
+            </button>
+            <button
+              onClick={() => navigate('/demoform')}
               className="border-2 border-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
             >
               Schedule Demo Class
-            </Link>
+            </button>
           </div>
         </div>
       </section>

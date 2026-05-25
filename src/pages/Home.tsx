@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Award, BookOpen, CheckCircle, Clock, Globe, MessageSquare, Star, TrendingUp, Users, Play, Video } from 'lucide-react';
+import { ArrowRight, Award, BookOpen, CheckCircle, Clock, Globe, MessageSquare, TrendingUp, Users, Play, Video } from 'lucide-react';
 import DemoForm from '../components/DemoForm';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -9,34 +9,26 @@ import { Slider } from './slider';
 // import RohitGupta from '../assets/Rohit-Gupta.jpg';
 
 import { getPublicTeachers } from '../api/api/teacherApi.js';
-import { getApprovedTestimonials } from '../api/api/testimonialApi.js';
 
 const Home = () => {
   const [tutors, setTutors] = useState<any[]>([]);
-  const [testimonials, setTestimonials] = useState<any[]>([]);
 
   // Determine the best image URL to show for tutors
   const getTutorImageUrl = (tutor: any) => {
     const photoUrl = tutor.photoUrl || tutor.image;
     if (!photoUrl) return 'https://images.unsplash.com/photo-1544717305-27a734ef1904?auto=format&fit=crop&q=80&w=400';
     if (photoUrl.startsWith('http')) return photoUrl;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://93.127.194.118:9014';
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api.astarclasses.com';
     return `${baseUrl}${photoUrl.startsWith('/') ? '' : '/'}${photoUrl}`;
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [teachersData, testimonialsData] = await Promise.all([
-          getPublicTeachers(),
-          getApprovedTestimonials()
-        ]);
+        const teachersData = await getPublicTeachers();
 
         const tutorList = teachersData?.content || (Array.isArray(teachersData) ? teachersData : []);
         setTutors(tutorList.slice(0, 3));
-
-        const testimonialList = testimonialsData?.content || (Array.isArray(testimonialsData) ? testimonialsData : []);
-        setTestimonials(testimonialList.slice(0, 3));
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -72,13 +64,13 @@ const Home = () => {
   ];
 
   const subjects = [
-    { name: 'Physics', level: 'IGCSE & AS/A Level', color: 'bg-blue-500' },
-    { name: 'Chemistry', level: 'IGCSE & AS/A Level', color: 'bg-green-500' },
-    { name: 'Mathematics', level: 'IGCSE & AS/A Level', color: 'bg-purple-500' },
-    { name: 'Economics', level: 'IGCSE & AS/A Level', color: 'bg-orange-500' },
-    { name: 'Biology', level: 'IGCSE & AS/A Level', color: 'bg-teal-500' },
-    { name: 'Further Math', level: 'IGCSE & AS/A Level', color: 'bg-indigo-500' },
-    { name: 'Languages', level: 'IGCSE & AS/A Level', color: 'bg-pink-500' }
+    { name: 'Physics', slug: 'physics', level: 'IGCSE & AS/A Level', color: 'bg-blue-500', image: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Chemistry', slug: 'chemistry', level: 'IGCSE & AS/A Level', color: 'bg-green-500', image: 'https://images.unsplash.com/photo-1532187875605-186c7131ef53?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Mathematics', slug: 'math', level: 'IGCSE & AS/A Level', color: 'bg-purple-500', image: 'https://images.unsplash.com/photo-1509228468518-180dd48a542f?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Economics', slug: 'economics', level: 'IGCSE & AS/A Level', color: 'bg-orange-500', image: 'https://images.unsplash.com/photo-1454165833767-027508496b4c?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Biology', slug: 'biology', level: 'IGCSE & AS/A Level', color: 'bg-teal-500', image: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Further Math', slug: 'further-math', level: 'IGCSE & AS/A Level', color: 'bg-indigo-500', image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=400' },
+    { name: 'Languages', slug: 'languages', level: 'IGCSE & AS/A Level', color: 'bg-pink-500', image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80&w=400' }
   ];
 
   const steps = [
@@ -131,14 +123,16 @@ const Home = () => {
                 Live, interactive classes by expert faculty. Personalized doubt-clearing, proven exam strategies, and comprehensive past-paper practice to ensure your academic success.
               </p>
               <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                <Link
-                  to="/demoform"
+                <a
+                  href="https://wa.me/918073982848"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-center"
                 >
-                  Schedule a Free Demo
-                </Link>
+                  Book a Free Demo Class
+                </a>
                 <button
-                  onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+                  onClick={() => window.open('https://wa.me/918073982848', '_blank')}
                   className="border border-white hover:bg-white hover:text-black px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-center"
                 >
                   WhatsApp Us
@@ -215,14 +209,16 @@ const Home = () => {
               {subjects.map((subject, index) => (
                 <Link
                   key={index}
-                  to={`/igcse/${subject.name.toLowerCase().replace(' ', '-')}`}
-                  className="group bg-white rounded-xl p-6 text-center border border-gray-200 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                  to={`/igcse/${subject.slug}`}
+                  className="group bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 hover:scale-105 p-6 flex flex-col items-center justify-center"
                 >
-                  <div className={`w-12 h-12 ${subject.color} rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                    <BookOpen className="h-6 w-6 text-white" />
+                  <div className={`w-16 h-16 ${subject.color} rounded-full flex items-center justify-center shadow-lg mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                    <BookOpen className="h-8 w-8 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-2">{subject.name}</h4>
-                  <p className="text-sm text-gray-600">{subject.level}</p>
+                  <div className="text-center">
+                    <h4 className="font-semibold text-gray-900 mb-1">{subject.name}</h4>
+                    <p className="text-xs text-gray-600">{subject.level}</p>
+                  </div>
                 </Link>
               ))}
             </div>
@@ -393,7 +389,15 @@ const Home = () => {
           </div>
 
           <div className="flex justify-center">
-            <DemoForm />
+            <a 
+              href="https://wa.me/918073982848" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-10 py-4 bg-green-600 text-white rounded-2xl font-bold text-lg hover:bg-green-700 transition-all shadow-xl shadow-green-600/20 active:scale-95 gap-3"
+            >
+              <MessageSquare className="h-6 w-6" />
+              Book a Free Demo Class (WhatsApp)
+            </a>
           </div>
 
           <div className="mt-16 bg-white rounded-2xl p-8 shadow-lg">

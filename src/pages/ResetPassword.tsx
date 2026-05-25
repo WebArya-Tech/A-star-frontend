@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { adminForgotPassword, adminResetPassword } from '../api/api/authApi.js';
+import { userForgotPassword, userResetPassword, adminForgotPassword, adminResetPassword } from '../api/api/authApi.js';
+import toast from 'react-hot-toast';
 
 const ResetPassword = () => {
     const navigate = useNavigate();
@@ -12,6 +13,24 @@ const ResetPassword = () => {
     const [errors, setErrors] = useState<{ email?: string; otp?: string; password?: string; confirmPassword?: string; form?: string }>({});
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+    const [isForAdmin, setIsForAdmin] = useState(false);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (resendTimer > 0) {
+            interval = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const validateEmail = (value: string) => {
         if (!value.trim()) return 'Email is required.';
@@ -34,16 +53,33 @@ const ResetPassword = () => {
 
         setIsSubmitting(true);
         try {
-            const result = await adminForgotPassword(email.trim());
+            // Try user forgot password first
+            let result;
+            try {
+                result = await userForgotPassword(email.trim());
+                setIsForAdmin(false);
+            } catch (userError) {
+                // If student fails, try admin
+                result = await adminForgotPassword(email.trim());
+                setIsForAdmin(true);
+            }
+
             const isSuccess = result.success !== false;
             if (!isSuccess) {
-                setErrors({ form: result.message || 'Unable to send reset OTP. Please try again.' });
+                const errorMsg = result.message || 'Unable to send reset OTP. Please try again.';
+                setErrors({ form: errorMsg });
+                toast.error(errorMsg);
             } else {
-                setMessage(result.message || 'OTP sent to your email.');
+                const successMsg = result.message || 'OTP sent to your email.';
+                setMessage(successMsg);
+                toast.success(successMsg);
                 setStep(2);
+                setResendTimer(300); // 5 minutes
             }
         } catch (error: any) {
-            setErrors({ form: error?.message || 'Unable to send reset OTP. Please try again.' });
+            const errorMsg = error?.message || 'Unable to send reset OTP. Please try again.';
+            setErrors({ form: errorMsg });
+            toast.error(errorMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -58,6 +94,7 @@ const ResetPassword = () => {
             validationErrors.otp = 'OTP is required.';
         } else if (!/^\d{6}$/.test(otp.trim())) {
             validationErrors.otp = 'OTP must be a 6-digit number.';
+            toast.error("Please enter a valid 6-digit OTP.");
         }
 
         if (!newPassword) {
@@ -75,16 +112,26 @@ const ResetPassword = () => {
 
         setIsSubmitting(true);
         try {
-            const result = await adminResetPassword({ email: email.trim(), otp: otp.trim(), newPassword });
+            const data = { email: email.trim(), otp: otp.trim(), newPassword };
+            const result = isForAdmin 
+                ? await adminResetPassword(data)
+                : await userResetPassword(data);
+            
             const isSuccess = result.success !== false;
             if (!isSuccess) {
-                setErrors({ form: result.message || 'Unable to reset password. Please try again.' });
+                const errorMsg = result.message || 'Unable to reset password. Please try again.';
+                setErrors({ form: errorMsg });
+                toast.error(errorMsg);
             } else {
-                setMessage(result.message || 'Password reset successfully.');
+                const successMsg = result.message || 'Password reset successfully.';
+                setMessage(successMsg);
+                toast.success(successMsg);
                 setTimeout(() => navigate('/login'), 1200);
             }
         } catch (error: any) {
-            setErrors({ form: error?.message || 'Unable to reset password. Please try again.' });
+            const errorMsg = error?.message || 'Unable to reset password. Please try again.';
+            setErrors({ form: errorMsg });
+            toast.error(errorMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -95,7 +142,7 @@ const ResetPassword = () => {
             <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-8">
                 <h2 className="text-2xl font-bold text-center text-blue-800">Reset Password</h2>
                 <p className="text-center text-sm text-gray-600 mb-6">
-                    {step === 1 ? 'Enter your admin email to receive a reset OTP.' : 'Enter the OTP and set a new password.'}
+                    {step === 1 ? 'Enter your email to receive a reset OTP.' : 'Enter the OTP and set a new password.'}
                 </p>
 
                 {errors.form && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 mb-4">{errors.form}</p>}
@@ -141,6 +188,17 @@ const ResetPassword = () => {
                                 placeholder="Enter the 6-digit OTP"
                             />
                             {errors.otp && <p className="text-red-500 text-sm mt-1">{errors.otp}</p>}
+                        </div>
+
+                        <div className="flex justify-between items-center px-1">
+                            <button
+                                type="button"
+                                onClick={handleSendResetOtp}
+                                disabled={isSubmitting || resendTimer > 0}
+                                className={`text-xs font-semibold transition-colors ${resendTimer > 0 ? 'text-gray-400' : 'text-blue-700 hover:underline'}`}
+                            >
+                                {resendTimer > 0 ? `Resend OTP in ${formatTime(resendTimer)}` : 'Resend OTP'}
+                            </button>
                         </div>
                         <div>
                             <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">

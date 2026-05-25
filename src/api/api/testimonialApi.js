@@ -39,30 +39,17 @@ export const getPrimaryTestimonial = async () => {
 };
 
 /**
- * User Endpoints
+ * User/Public Endpoints
  */
 
 /**
- * A logged-in user submits a testimonial. If media was uploaded, content is the URL.
- * @param {Object} data - { teacherId, reviewerName, content, rating, role, type }
+ * A user submits a testimonial for moderation.
  */
 export const submitTestimonial = async (data) => {
   try {
-    // The logs show /api/testimonials does not support POST.
-    // Based on previous code and standard patterns, we use /submit
-    // For admins, we try the admin path if /submit is not the one.
-    const role = localStorage.getItem('icfy_role');
-    const endpoint = role === 'admin' ? '/api/admin/testimonials' : '/api/testimonials/submit';
-    
-    try {
-      const response = await api.post(endpoint, data);
-      return response.data;
-    } catch (err) {
-      // Fallback to /api/testimonials/submit if admin path fails, or vice versa
-      const fallbackEndpoint = endpoint === '/api/admin/testimonials' ? '/api/testimonials/submit' : '/api/admin/testimonials';
-      const response = await api.post(fallbackEndpoint, data);
-      return response.data;
-    }
+    // According to Swagger, public submission is POST /api/testimonials
+    const response = await api.post('/api/testimonials', data);
+    return response.data;
   } catch (error) {
     throw error.response?.data || error;
   }
@@ -128,7 +115,7 @@ export const updateTestimonial = async (id, data) => {
   }
 };
 
-// Delete a testimonial (Admin)
+// Set primary testimonial (Admin)
 export const setPrimaryTestimonial = async (id) => {
   try {
     const response = await api.post(`${ADMIN_TESTIMONIAL_BASE_URL}/${id}/primary`);
@@ -160,14 +147,13 @@ export const exportTestimonialsToCSV = async () => {
   }
 };
 
-// Export all testimonials as CSV (Admin)
+// Export all testimonials (Admin)
 export const exportTestimonials = async () => {
   try {
     const response = await api.get('/api/admin/export/testimonials', {
       responseType: 'blob'
     });
     
-    // Create a temporary link to download the blob
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
@@ -181,4 +167,3 @@ export const exportTestimonials = async () => {
     throw error.response?.data || error;
   }
 };
-

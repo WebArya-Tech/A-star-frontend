@@ -10,7 +10,7 @@ const IGCSEHub = () => {
       description: 'Master fundamental physics concepts with practical applications',
       topics: ['Mechanics', 'Thermal Physics', 'Waves', 'Electricity & Magnetism'],
       color: 'bg-blue-500',
-      image: 'https://images.pexels.com/photos/3791664/pexels-photo-3791664.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Chemistry',
@@ -18,7 +18,7 @@ const IGCSEHub = () => {
       description: 'Comprehensive coverage of chemical principles and reactions',
       topics: ['Atomic Structure', 'Chemical Bonding', 'Organic Chemistry', 'Chemical Analysis'],
       color: 'bg-green-500',
-      image: 'https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1532187875605-1ef6c237f142?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Mathematics',
@@ -26,7 +26,7 @@ const IGCSEHub = () => {
       description: 'Build strong mathematical foundations for higher studies',
       topics: ['Algebra', 'Geometry', 'Statistics', 'Calculus Basics'],
       color: 'bg-purple-500',
-      image: 'https://images.pexels.com/photos/3729557/pexels-photo-3729557.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Economics',
@@ -34,7 +34,7 @@ const IGCSEHub = () => {
       description: 'Understand economic principles and real-world applications',
       topics: ['Microeconomics', 'Macroeconomics', 'Market Structures', 'Government Policy'],
       color: 'bg-orange-500',
-      image: 'https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Biology',
@@ -42,7 +42,7 @@ const IGCSEHub = () => {
       description: 'Explore life sciences with detailed biological concepts',
       topics: ['Cell Biology', 'Genetics', 'Human Biology', 'Ecology'],
       color: 'bg-teal-500',
-      image: 'https://images.pexels.com/photos/3825583/pexels-photo-3825583.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Further Mathematics',
@@ -50,7 +50,7 @@ const IGCSEHub = () => {
       description: 'Advanced mathematical concepts for ambitious students',
       topics: ['Complex Numbers', 'Matrices', 'Advanced Calculus', 'Differential Equations'],
       color: 'bg-indigo-500',
-      image: 'https://images.pexels.com/photos/3729557/pexels-photo-3729557.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Languages',
@@ -58,7 +58,7 @@ const IGCSEHub = () => {
       description: 'Master language skills with comprehensive training',
       topics: ['Grammar', 'Literature', 'Writing Skills', 'Speaking & Listening'],
       color: 'bg-pink-500',
-      image: 'https://images.pexels.com/photos/3769021/pexels-photo-3769021.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80&w=600'
     }
   ];
 
@@ -100,12 +100,12 @@ const IGCSEHub = () => {
               and proven results. Build strong foundations for your AS/A Level success.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/demoform"
-                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+              <button
+                onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
                 Book Free Demo
-              </Link>
+              </button>
               <Link
                 to="/contact?mode=direct&subject=course-inquiry#contact-form"
                 className="border-2 border-white hover:bg-white hover:text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
@@ -204,14 +204,14 @@ const IGCSEHub = () => {
             Join thousands of successful students who achieved A*/A grades with our proven teaching methodology.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/demoform"
-              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+            <button
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
             >
               Schedule Free Demo
-            </Link>
+            </button>
             <button
-              onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
               className="border-2 border-white hover:bg-white hover:text-blue-800 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
             >
               WhatsApp Now

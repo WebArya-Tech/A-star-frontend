@@ -4,7 +4,16 @@ import {
   User, Clock, CheckCircle, Eye, Plus, X, 
   BookOpen, ChevronLeft, ChevronRight 
 } from 'lucide-react'; 
-import { contactApi } from '../../api/contactApi'; 
+import { 
+  getAdminMessages, 
+  getAdminSubjects, 
+  updateMessageStatusAdmin, 
+  deleteMessageAdmin, 
+  createSubjectAdmin, 
+  deleteSubjectAdmin,
+  getContactSettingsAdmin,
+  updateContactSettingsAdmin 
+} from '../../api/api/contactApi'; 
 import toast from 'react-hot-toast'; 
 
 const STATUS_CONFIG = { 
@@ -17,7 +26,20 @@ export default function ContactRequests() {
   const [activeTab, setActiveTab] = useState('messages'); 
   const [messages, setMessages] = useState([]); 
   const [subjects, setSubjects] = useState([]); 
+  const [settings, setSettings] = useState({
+    phoneNumber: '',
+    whatsappNumber: '',
+    emailAddress: '',
+    officeAddress: '',
+    officeHours: '',
+    googleMapsUrl: '',
+    facebookUrl: '',
+    instagramUrl: '',
+    linkedinUrl: '',
+    twitterUrl: ''
+  });
   const [loading, setLoading] = useState(true); 
+  const [savingSettings, setSavingSettings] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all'); 
   const [searchTerm, setSearchTerm] = useState(''); 
   const [pagination, setPagination] = useState({ 
@@ -34,24 +56,27 @@ export default function ContactRequests() {
   useEffect(() => { 
     if (activeTab === 'messages') { 
       loadMessages(); 
-    } else { 
+    } else if (activeTab === 'subjects') { 
       loadSubjects(); 
-    } 
+    } else if (activeTab === 'settings') {
+      loadSettings();
+    }
   }, [activeTab, filterStatus, pagination.page]); 
 
   const loadMessages = async () => { 
     setLoading(true); 
     try { 
-      const response = await contactApi.getAdminMessages({ 
+      const response = await getAdminMessages({ 
         status: filterStatus === 'all' ? undefined : filterStatus, 
         page: pagination.page, 
         size: pagination.size 
       }); 
       
-      setMessages(response.content || []); 
+      const content = response.content || response.data || [];
+      setMessages(content); 
       setPagination(prev => ({ 
         ...prev, 
-        totalElements: response.totalElements || 0, 
+        totalElements: response.totalElements || response.totalItems || 0, 
         totalPages: response.totalPages || 0 
       })); 
     } catch (error) { 
@@ -65,8 +90,8 @@ export default function ContactRequests() {
   const loadSubjects = async () => { 
     setLoading(true); 
     try { 
-      const data = await contactApi.getAdminSubjects(); 
-      setSubjects(Array.isArray(data) ? data : []); 
+      const data = await getAdminSubjects(); 
+      setSubjects(Array.isArray(data) ? data : (data.data || [])); 
     } catch (error) { 
       console.error('Failed to load subjects:', error); 
       toast.error('Failed to load subjects'); 
@@ -75,9 +100,36 @@ export default function ContactRequests() {
     } 
   }; 
 
+  const loadSettings = async () => {
+    setLoading(true);
+    try {
+      const data = await getContactSettingsAdmin();
+      if (data) setSettings(data);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      toast.error('Failed to load contact settings');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSettings = async (e) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      await updateContactSettingsAdmin(settings);
+      toast.success('✅ Contact settings updated successfully');
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+      toast.error('❌ Failed to update settings');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   const handleStatusUpdate = async (id, status) => { 
     try { 
-      await contactApi.updateAdminMessageStatus(id, status); 
+      await updateMessageStatusAdmin(id, status); 
       toast.success(`Message marked as ${status.toLowerCase()}`); 
       loadMessages(); 
       if (selectedMessage?.id === id) { 
@@ -91,7 +143,7 @@ export default function ContactRequests() {
   const handleDeleteMessage = async (id) => { 
     if (!window.confirm('Are you sure you want to delete this message permanently?')) return; 
     try { 
-      await contactApi.deleteAdminMessage(id); 
+      await deleteMessageAdmin(id); 
       toast.success('Message deleted'); 
       loadMessages(); 
       if (selectedMessage?.id === id) setSelectedMessage(null); 
@@ -104,7 +156,7 @@ export default function ContactRequests() {
     e.preventDefault(); 
     if (!newSubject.trim()) return; 
     try { 
-      await contactApi.createAdminSubject({ name: newSubject }); 
+      await createSubjectAdmin({ name: newSubject }); 
       toast.success('Subject created'); 
       setNewSubject(''); 
       setShowSubjectForm(false); 
@@ -117,7 +169,7 @@ export default function ContactRequests() {
   const handleDeleteSubject = async (id) => { 
     if (!window.confirm('Delete this subject?')) return; 
     try { 
-      await contactApi.deleteAdminSubject(id); 
+      await deleteSubjectAdmin(id); 
       toast.success('Subject deleted'); 
       loadSubjects(); 
     } catch (error) { 
@@ -156,6 +208,14 @@ export default function ContactRequests() {
           }`} 
         > 
           Contact Subjects 
+        </button> 
+        <button 
+          onClick={() => setActiveTab('settings')} 
+          className={`px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${ 
+            activeTab === 'settings' ? 'border-blue-900 text-blue-900' : 'border-transparent text-gray-500 hover:text-blue-900' 
+          }`} 
+        > 
+          Contact Settings 
         </button> 
       </div> 
 
@@ -259,7 +319,7 @@ export default function ContactRequests() {
             )} 
           </div> 
         </div> 
-      ) : ( 
+      ) : activeTab === 'subjects' ? ( 
         <div className="space-y-4"> 
           <div className="flex justify-between items-center"> 
             <h3 className="font-bold text-lg text-blue-900">Manage Inquiry Subjects</h3> 
@@ -302,7 +362,102 @@ export default function ContactRequests() {
             ))} 
           </div> 
         </div> 
-      )} 
+      ) : (
+        <div className="bg-white rounded-xl shadow-md p-6 border">
+          <h3 className="text-xl font-bold text-gray-800 mb-6">Contact Information Settings</h3>
+          <form onSubmit={handleUpdateSettings} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                <input
+                  type="text"
+                  value={settings.phoneNumber}
+                  onChange={(e) => setSettings({ ...settings, phoneNumber: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-900/20"
+                  placeholder="+91-XXXXXXXXXX"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">WhatsApp Number</label>
+                <input
+                  type="text"
+                  value={settings.whatsappNumber}
+                  onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-900/20"
+                  placeholder="+91-XXXXXXXXXX"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={settings.emailAddress}
+                  onChange={(e) => setSettings({ ...settings, emailAddress: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-900/20"
+                  placeholder="contact@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Office Hours</label>
+                <input
+                  type="text"
+                  value={settings.officeHours}
+                  onChange={(e) => setSettings({ ...settings, officeHours: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-900/20"
+                  placeholder="Mon-Fri: 9AM - 6PM"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Office Address</label>
+                <textarea
+                  value={settings.officeAddress}
+                  onChange={(e) => setSettings({ ...settings, officeAddress: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-900/20 h-24"
+                  placeholder="Enter full office address..."
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Google Maps Embed URL</label>
+                <input
+                  type="text"
+                  value={settings.googleMapsUrl}
+                  onChange={(e) => setSettings({ ...settings, googleMapsUrl: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-900/20"
+                  placeholder="https://www.google.com/maps/embed?..."
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <h4 className="font-bold text-gray-800 mb-4">Social Media Links</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['facebook', 'instagram', 'linkedin', 'twitter'].map((social) => (
+                  <div key={social}>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1 capitalize">{social} URL</label>
+                    <input
+                      type="text"
+                      value={settings[`${social}Url`]}
+                      onChange={(e) => setSettings({ ...settings, [`${social}Url`]: e.target.value })}
+                      className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-900/20"
+                      placeholder={`https://${social}.com/...`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6">
+              <button
+                type="submit"
+                disabled={savingSettings}
+                className="bg-blue-900 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-800 transition shadow-lg disabled:opacity-50"
+              >
+                {savingSettings ? 'Saving...' : 'Save All Settings'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) } 
 
       {selectedMessage && ( 
         <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"> 

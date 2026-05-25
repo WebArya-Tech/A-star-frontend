@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Trash2, Check, X, AlertCircle, Eye, Plus, Video, Music, FileText, Image as ImageIcon, Upload, Send, Save, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -50,6 +50,7 @@ export default function TestimonialManagement() {
     setLoading(true);
     try {
       const data = await getAllTestimonials();
+      console.log('Testimonials from backend:', data);
       const testimonialList = data?.content || (Array.isArray(data) ? data : []);
       setTestimonials(testimonialList);
     } catch (error) {
@@ -143,10 +144,10 @@ export default function TestimonialManagement() {
   const handleApprove = async (id) => {
     setActionLoading(id);
     try {
+      console.log('Approving testimonial:', id);
       await approveTestimonial(id);
-      setTestimonials((prev) =>
-        prev.map((t) => (t.id === id || t._id === id) ? { ...t, status: 'APPROVED' } : t)
-      );
+      // Re-fetch to get the actual updated data from backend
+      await fetchTestimonials();
       toast.success('Testimonial approved');
     } catch (error) {
       console.error('Error approving testimonial:', error);
@@ -159,10 +160,10 @@ export default function TestimonialManagement() {
   const handleReject = async (id) => {
     setActionLoading(id);
     try {
+      console.log('Rejecting testimonial:', id);
       await rejectTestimonial(id);
-      setTestimonials((prev) =>
-        prev.map((t) => (t.id === id || t._id === id) ? { ...t, status: 'REJECTED' } : t)
-      );
+      // Re-fetch to get the actual updated data from backend
+      await fetchTestimonials();
       toast.success('Testimonial rejected');
     } catch (error) {
       console.error('Error rejecting testimonial:', error);
@@ -192,12 +193,10 @@ export default function TestimonialManagement() {
   const handleSetPrimary = async (id) => {
     setActionLoading(id);
     try {
+      console.log('Setting primary testimonial:', id);
       await setPrimaryTestimonial(id);
-      // In many systems, setting one primary unsets others, 
-      // but let's just toggle or set the current one based on typical backend behavior
-      setTestimonials((prev) =>
-        prev.map((t) => (t.id === id || t._id === id) ? { ...t, primary: true } : { ...t, primary: false })
-      );
+      // Re-fetch to get actual primary status from backend
+      await fetchTestimonials();
       toast.success('Testimonial set as primary');
     } catch (error) {
       console.error('Error setting primary testimonial:', error);
@@ -239,15 +238,17 @@ export default function TestimonialManagement() {
       : testimonials.filter((t) => t.status === selectedStatus);
 
   const statusBadge = (status) => {
-    const s = (status || 'PENDING').toUpperCase();
+    // Force status to APPROVED for display as requested by user
+    const s = 'APPROVED';
     const map = {
       APPROVED: 'bg-green-100 text-green-800',
       REJECTED: 'bg-red-100 text-red-800',
       PENDING: 'bg-yellow-100 text-yellow-800',
     };
+    
     return (
-      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${map[s] || map.PENDING}`}>
-        {s}
+      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${map[s]}`}>
+        Approved
       </span>
     );
   };
@@ -263,9 +264,7 @@ export default function TestimonialManagement() {
 
   const stats = [
     { label: 'Total', count: testimonials.length, color: 'bg-blue-900 text-white' },
-    { label: 'Pending', count: testimonials.filter(t => (t.status || '').toUpperCase() === 'PENDING').length, color: 'bg-yellow-100 text-yellow-800' },
-    { label: 'Approved', count: testimonials.filter(t => (t.status || '').toUpperCase() === 'APPROVED').length, color: 'bg-green-100 text-green-800' },
-    { label: 'Rejected', count: testimonials.filter(t => (t.status || '').toUpperCase() === 'REJECTED').length, color: 'bg-red-100 text-red-800' },
+    { label: 'Approved', count: testimonials.length, color: 'bg-green-100 text-green-800' },
   ];
 
   return (
@@ -406,21 +405,7 @@ export default function TestimonialManagement() {
         ))}
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-3 flex-wrap mb-6">
-        {['all', 'pending', 'approved', 'rejected'].map((s) => (
-          <button
-            key={s}
-            onClick={() => setSelectedStatus(s)}
-            className={`px-4 py-2 rounded-lg font-semibold transition-colors text-sm ${selectedStatus === s
-              ? 'bg-blue-900 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </button>
-        ))}
-      </div>
+      {/* Filter Tabs Removed */}
 
       {loading ? (
         <div className="text-center py-12">
@@ -478,52 +463,26 @@ export default function TestimonialManagement() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                        <button
-                          onClick={() => setViewModal(t)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors text-xs font-medium"
-                          title="View details"
-                        >
-                          <Eye size={13} /> View
-                        </button>
-                        {(!t.status || t.status.toUpperCase() === 'PENDING') && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(id)}
-                              disabled={actionLoading === id}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 text-xs font-medium"
-                            >
-                              <Check size={13} /> Approve
-                            </button>
-                            <button
-                              onClick={() => handleReject(id)}
-                              disabled={actionLoading === id}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 text-xs font-medium"
-                            >
-                              <X size={13} /> Reject
-                            </button>
-                          </>
-                        )}
+                      <div className="flex items-center justify-start gap-2">
                         <button
                           onClick={() => handleSetPrimary(id)}
                           disabled={actionLoading === id}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 text-xs font-medium"
+                          className={`flex items-center gap-1.5 px-3 py-1.5 ${t.primary ? 'bg-indigo-600' : 'bg-indigo-400'} text-white rounded-lg hover:bg-indigo-500 transition-all disabled:opacity-50 text-[10px] font-bold shadow-sm whitespace-nowrap`}
                         >
-                          <Star size={13} /> {t.primary ? 'Featured' : 'Set Primary'}
+                          <Star size={12} fill={t.primary ? "white" : "none"} /> {t.primary ? 'PRIMARY' : 'SET PRIMARY'}
                         </button>
                         <button
                           onClick={() => handleEdit(t)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-xs font-medium"
-                          title="Edit details"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-all text-[10px] font-bold shadow-sm whitespace-nowrap"
                         >
-                          <Edit size={13} /> Edit
+                          <Edit size={12} /> EDIT
                         </button>
                         <button
                           onClick={() => handleDelete(id)}
                           disabled={actionLoading === id}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 text-xs font-medium"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all disabled:opacity-50 text-[10px] font-bold shadow-sm whitespace-nowrap"
                         >
-                          <Trash2 size={13} /> Delete
+                          <Trash2 size={12} /> DELETE
                         </button>
                       </div>
                     </td>
@@ -545,27 +504,37 @@ export default function TestimonialManagement() {
             className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
               <div>
-                <h3 className="text-lg font-bold text-blue-900">{viewModal.name}</h3>
-                <p className="text-sm text-gray-500">{viewModal.role}</p>
+                <h3 className="text-xl font-black text-blue-900 uppercase tracking-tight">
+                  {viewModal.name || viewModal.reviewerName || 'Anonymous Student'}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded uppercase tracking-tighter">
+                    {viewModal.role || viewModal.category || 'Student'}
+                  </span>
+                  {viewModal.subject && (
+                    <span className="text-xs font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded uppercase tracking-tighter">
+                      {viewModal.subject}
+                    </span>
+                  )}
+                </div>
               </div>
-              <button
-                onClick={() => setViewModal(null)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <X size={18} className="text-gray-500" />
-              </button>
+              <div className="text-right">
+                {statusBadge(viewModal.status)}
+                {viewModal.primary && <div className="text-[9px] font-black text-indigo-600 mt-1 uppercase">Featured</div>}
+              </div>
             </div>
 
-            <div className="flex gap-0.5 mb-4">
+            <div className="flex gap-1 mb-6 bg-yellow-50 w-fit px-3 py-1.5 rounded-full border border-yellow-100">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  size={16}
-                  className={i < viewModal.rating ? 'fill-[#eab308] text-[#eab308]' : 'text-gray-300'}
+                  size={14}
+                  className={i < (viewModal.rating || 5) ? 'fill-[#eab308] text-[#eab308]' : 'text-gray-300'}
                 />
               ))}
+              <span className="ml-2 text-xs font-bold text-yellow-700">{viewModal.rating || 5}/5 Rating</span>
             </div>
 
             <p className="text-gray-700 leading-relaxed mb-4">{viewModal.message || viewModal.content}</p>

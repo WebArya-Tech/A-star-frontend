@@ -2,10 +2,10 @@ import { makeApiCall, type QueryRecord } from './runtimeApiBase.ts';
 
 const FORCE_LOCAL_DEMO_API = String(import.meta.env.VITE_USE_LOCAL_DEMO_API || '').toLowerCase() === 'true';
 const HAS_REMOTE_BASE = Boolean(import.meta.env.VITE_API_BASE_URL);
-const USE_LOCAL_MODE = FORCE_LOCAL_DEMO_API || (import.meta.env.DEV && !HAS_REMOTE_BASE);
+const USE_LOCAL_MODE = FORCE_LOCAL_DEMO_API;
 
-const DEMO_GRADES_STORAGE_KEY = 'icfy_demo_grades';
-const DEMO_BOARDS_STORAGE_KEY = 'icfy_demo_boards';
+const DEMO_GRADES_STORAGE_KEY = 'icfy_demo_grades_v4';
+const DEMO_BOARDS_STORAGE_KEY = 'icfy_demo_boards_v4';
 const DEMO_SCHEDULES_STORAGE_KEY = 'icfy_demo_schedules';
 
 type Grade = {
@@ -98,31 +98,28 @@ async function getGrades(): Promise<Grade[]> {
 
 function getLocalGrades(): Grade[] {
     return [
-        { id: "69d92d53ea90e2196bf61733", name: "Grade 9", displayName: "Grade 9" },
-        { id: "69d92d59ea90e2196bf61734", name: "Grade 10", displayName: "Grade 10" },
-        { id: "69d92d63ea90e2196bf61735", name: "Grade 11", displayName: "Grade 11" },
-        { id: "69d92d68ea90e2196bf61736", name: "Grade 12", displayName: "Grade 12" }
+        { id: "69f59c3b7fba777198d8f380", name: "Grade 8", displayName: "Grade 8" },
+        { id: "69f59c3b7fba777198d8f381", name: "Grade 9", displayName: "Grade 9" },
+        { id: "69f59c3b7fba777198d8f382", name: "Grade 10", displayName: "Grade 10" },
+        { id: "69f59c3b7fba777198d8f383", name: "Grade 11", displayName: "Grade 11" },
+        { id: "69f59c3b7fba777198d8f384", name: "Grade 12", displayName: "Grade 12" }
     ];
 }
 
 function getLocalBoards(): Board[] {
     return [
-        { id: "69d92d9fea90e2196bf61737", name: "AS level and A levels", displayName: "AS level and A levels" },
-        { id: "69d92dadea90e2196bf61738", name: "IGCSE", displayName: "IGCSE" }
+        { id: "69f59c3b7fba777198d8f379", name: "AS level and A level", displayName: "AS level and A level" },
+        { id: "69f59c3b7fba777198d8f37b", name: "IGCSE", displayName: "IGCSE" }
     ];
 }
 
 function filterDemoBoards(boards: Board[]): Board[] {
     if (!Array.isArray(boards) || boards.length === 0) return getLocalBoards();
-    const allowedNames = ['IGCSE', 'AS level and A levels'];
-    const filtered = boards.filter(
-        (board) =>
-            board && (
-                allowedNames.includes(board.displayName) ||
-                allowedNames.includes(board.name)
-            )
-    );
-    return filtered.length > 0 ? filtered : getLocalBoards();
+    // Return all boards from API if available, only fallback to hardcoded if empty
+    return boards.map(b => ({
+        ...b,
+        displayName: b.displayName || b.name
+    }));
 }
 
 async function getBoards(): Promise<Board[]> {
@@ -191,7 +188,10 @@ async function sendDemoOtp(email: string): Promise<OtpResponse> {
     }
 
     try {
-        const response = await makeApiCall<OtpResponse>('POST', '/api/public/demo/schedule/send-otp', { email });
+        const response = await makeApiCall<OtpResponse>('POST', '/api/public/demo/schedule/send-otp', { 
+            email,
+            isResend: false 
+        });
         return response;
     } catch (error) {
         console.error('Failed to send demo OTP:', error);

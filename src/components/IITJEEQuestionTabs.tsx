@@ -1,106 +1,112 @@
-import React, { useState } from 'react';
-
-const mathQuestions = [
-    'Evaluate the integral: ∫₀¹ x² dx',
-    'Solve for x: x² - 5x + 6 = 0',
-    'Find the derivative of sin(x)·eˣ',
-    'If A = [1 2; 3 4], find det(A)',
-    'Prove that the sum of the first n natural numbers is n(n+1)/2',
-    'Find the value of limₓ→0 (sin x)/x',
-    'If f(x) = x³, find f⁻¹(x)',
-    'Solve the differential equation: dy/dx = y',
-    'Find the area under y = x² between x = 0 and x = 2',
-    'If logₐb = 2 and logₐc = 3, find logₐ(bc)',
-    'Find the roots of x³ - 1 = 0',
-    'Evaluate: ∑ₙ₌₁^∞ 1/n²',
-    'If z = 3 + 4i, find |z|',
-    'Find the equation of the tangent to y = x² at x = 1',
-    'If P(A) = 0.3, P(B) = 0.4, P(A∩B) = 0.1, find P(A∪B)',
-    'Find the general solution of d²y/dx² + y = 0',
-    'If a vector a = 2i + 3j, find its magnitude',
-    'Find the sum of the GP: 2, 4, 8, ... up to 10 terms',
-    'If f(x) = eˣ, find the Maclaurin series up to x²',
-    'Evaluate: ∫₀^π sin²x dx',
-];
+import React, { useState, useEffect } from 'react';
+import { getQuestions } from '../api/api/questionApi';
+import { submitAnswer } from '../api/api/answerApi';
+import toast from 'react-hot-toast';
 
 const IITJEEQuestionTabs: React.FC = () => {
     const [tab, setTab] = useState<'open' | 'closed'>('open');
-    const [answers, setAnswers] = useState<{ [idx: number]: string }>({});
+    const [questions, setQuestions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [answers, setAnswers] = useState<{ [id: string]: string }>({});
+    const [submitting, setSubmitting] = useState<{ [id: string]: boolean }>({});
 
-    const handleAnswer = (idx: number, value: string) => {
-        setAnswers(prev => ({ ...prev, [idx]: value }));
+    useEffect(() => {
+        fetchQuestions();
+    }, []);
+
+    const fetchQuestions = async () => {
+        setLoading(true);
+        try {
+            const data = await getQuestions({ page: 0, size: 20 });
+            setQuestions(data.content || []);
+        } catch (error) {
+            console.error('Error fetching questions:', error);
+            toast.error('Failed to load questions');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const openQuestions = mathQuestions.filter((_, idx) => answers[idx]);
-    const closedQuestions = mathQuestions.filter((_, idx) => !answers[idx]);
+    const handleAnswerChange = (id: string, value: string) => {
+        setAnswers(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleSubmit = async (id: string) => {
+        const content = answers[id];
+        if (!content?.trim()) {
+            toast.error('Please write a solution first');
+            return;
+        }
+
+        setSubmitting(prev => ({ ...prev, [id]: true }));
+        try {
+            await submitAnswer({ questionId: id, contentHtml: content });
+            toast.success('Solution submitted for review!');
+            // Clear answer after submission
+            setAnswers(prev => {
+                const next = { ...prev };
+                delete next[id];
+                return next;
+            });
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to submit solution');
+        } finally {
+            setSubmitting(prev => ({ ...prev, [id]: false }));
+        }
+    };
 
     return (
-        <div className="w-full max-w-2xl mx-auto mt-8 bg-white rounded-xl shadow-lg p-6">
+        <div className="w-full max-w-3xl mx-auto mt-8 bg-white rounded-xl shadow-lg p-6">
             <div className="flex justify-end gap-2 mb-6">
                 <button
                     className={`px-6 py-2 rounded-t-lg font-semibold transition-all ${tab === 'open' ? 'bg-indigo-600 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     onClick={() => setTab('open')}
                 >
-                    Open
-                </button>
-                <button
-                    className={`px-6 py-2 rounded-t-lg font-semibold transition-all ${tab === 'closed' ? 'bg-indigo-600 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                    onClick={() => setTab('closed')}
-                >
-                    Closed
+                    Questions
                 </button>
             </div>
 
-            {tab === 'open' && (
-                <div>
-                    <h2 className="text-lg font-bold mb-4 text-indigo-700">Attempted Questions</h2>
-                    {openQuestions.length === 0 ? (
-                        <div className="text-gray-500">No questions attempted yet. Select a question below to answer.</div>
-                    ) : (
-                        <ul className="space-y-6">
-                            {mathQuestions.map((q, idx) =>
-                                answers[idx] ? (
-                                    <li key={idx} className="border-b pb-2">
-                                        <div className="font-medium text-gray-800 mb-2">Q{idx + 1}. {q}</div>
-                                        <textarea
-                                            className="w-full p-2 border rounded mb-2"
-                                            rows={3}
-                                            value={answers[idx]}
-                                            onChange={e => handleAnswer(idx, e.target.value)}
-                                            placeholder="Write your solution here..."
-                                        />
-                                    </li>
-                                ) : null
-                            )}
-                        </ul>
-                    )}
+            {loading ? (
+                <div className="flex justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
                 </div>
-            )}
-
-            {tab === 'closed' && (
-                <div>
-                    <h2 className="text-lg font-bold mb-4 text-indigo-700">Unattempted Questions</h2>
-                    {closedQuestions.length === 0 ? (
-                        <div className="text-green-600 font-semibold">All questions have been attempted!</div>
-                    ) : (
-                        <ul className="space-y-6">
-                            {mathQuestions.map((q, idx) =>
-                                !answers[idx] ? (
-                                    <li key={idx} className="border-b pb-2">
-                                        <div className="font-medium text-gray-800 mb-2">Q{idx + 1}. {q}</div>
-                                        <textarea
-                                            className="w-full p-2 border rounded mb-2"
-                                            rows={3}
-                                            value={answers[idx] || ''}
-                                            onChange={e => handleAnswer(idx, e.target.value)}
-                                            placeholder="Write your solution here..."
-                                        />
-                                    </li>
-                                ) : null
-                            )}
-                        </ul>
-                    )}
-                </div>
+            ) : questions.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">No questions available at the moment.</div>
+            ) : (
+                <ul className="space-y-8">
+                    {questions.map((q, idx) => (
+                        <li key={q.id} className="border-b pb-6 last:border-0">
+                            <div className="font-bold text-lg text-indigo-700 mb-2">Q{idx + 1}. {q.title}</div>
+                            <div 
+                                className="text-gray-700 mb-4 prose prose-indigo max-w-none"
+                                dangerouslySetInnerHTML={{ __html: q.descriptionHtml }}
+                            />
+                            <div className="space-y-3">
+                                <textarea
+                                    className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                                    rows={4}
+                                    value={answers[q.id] || ''}
+                                    onChange={e => handleAnswerChange(q.id, e.target.value)}
+                                    placeholder="Write your step-by-step solution here..."
+                                />
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => handleSubmit(q.id)}
+                                        disabled={submitting[q.id]}
+                                        className={`px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2`}
+                                    >
+                                        {submitting[q.id] ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Submitting...
+                                            </>
+                                        ) : 'Submit Solution'}
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
             )}
         </div>
     );

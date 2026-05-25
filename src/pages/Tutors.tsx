@@ -17,7 +17,7 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
         const photoUrl = tutor.photoUrl || tutor.image || image;
         if (!photoUrl) return 'https://images.unsplash.com/photo-1544717305-27a734ef1904?auto=format&fit=crop&q=80&w=400';
         if (typeof photoUrl === 'string' && photoUrl.startsWith('http')) return photoUrl;
-        const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://93.127.194.118:9014').replace(/\/$/, '');
+        const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'https://api.astarclasses.com').replace(/\/$/, '');
         const imagePath = typeof photoUrl === 'string' ? (photoUrl.startsWith('/') ? photoUrl : `/${photoUrl}`) : '';
         return `${baseUrl}${imagePath}`;
     };
@@ -29,7 +29,7 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
     return (
         <>
             <div className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col h-full">
-                <div className="relative h-72 overflow-hidden bg-gray-100">
+                <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
                     <button
                         type="button"
                         onClick={() => setShowModal(true)}
@@ -39,11 +39,18 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
                     <img
                         src={getImageUrl(tutor.photoUrl || tutor.image)}
                         alt={tutor.name}
-                        className="w-full h-full object-cover transition duration-700 group-hover:scale-110"
+                        className="w-full h-full object-contain bg-white transition duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <span className="absolute left-4 bottom-4 text-white text-[11px] px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        Click to view full image
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setShowModal(true); }}
+                            className="w-full py-3 bg-white text-blue-900 font-black text-xs rounded-xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 uppercase tracking-widest shadow-xl"
+                        >
+                            View Full Profile
+                        </button>
+                    </div>
+                    <span className="absolute left-4 top-4 text-white text-[10px] font-bold px-2 py-1 rounded bg-black/40 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 uppercase tracking-tighter">
+                        Passport Format
                     </span>
                 </div>
 

@@ -1,243 +1,338 @@
-﻿import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { getQuestions, deleteQuestion, updateQuestion } from '../../api/api/questionApi'
+import { getAdminAnswers, approveAnswer, rejectAnswer, deleteAnswer } from '../../api/api/answerApi'
+import { getCategories } from '../../api/api/categoryApi'
+import toast from 'react-hot-toast'
+import { Search, Filter, MessageSquare, CheckCircle, XCircle, Trash2, Eye, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
 
 export default function QuestionManagement() {
-  const [questions, setQuestions] = useState([
-    { id: 1, student: 'Rahul Sharma', subject: 'Calculus Integration', category: 'Mathematics', question: 'How to solve integration by parts?', aiAnswer: 'Apply the formula twice...', tutorAnswer: null, status: 'ai-answered', needsReview: true },
-    { id: 2, student: 'Priya Mehta', subject: 'Chemical Bonding', category: 'Chemistry', question: 'Difference between ionic and covalent bonds?', aiAnswer: 'Ionic bonds form between...', tutorAnswer: 'Let me explain...', status: 'tutor-reviewed', needsReview: false },
-  ])
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('all')
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5
+  const [searchTerm, setSearchTerm] = useState('')
+  const [categories, setCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 10,
+    totalElements: 0,
+    totalPages: 0
+  })
 
-  const handleAddAnswer = (id) => {
-    const answer = prompt('Enter tutor answer:')
-    if (!answer) return
-    setQuestions(questions.map(q => q.id === id ? { ...q, tutorAnswer: answer, status: 'tutor-reviewed' } : q))
+  const [activeTab, setActiveTab] = useState('questions') // 'questions' or 'answers'
+  const [answers, setAnswers] = useState([])
+  const [answersPagination, setAnswersPagination] = useState({
+    page: 0,
+    size: 10,
+    totalElements: 0,
+    totalPages: 0
+  })
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'questions') {
+      fetchQuestions()
+    } else {
+      fetchAnswers()
+    }
+  }, [activeTab, filterStatus, selectedCategory, pagination.page, searchTerm])
+
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories()
+      setCategories(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+    }
   }
 
-  const handleMarkReviewed = (id) => {
-    setQuestions(questions.map(q => q.id === id ? { ...q, needsReview: false } : q))
+  const fetchQuestions = async () => {
+    setLoading(true)
+    try {
+      const params = {
+        page: pagination.page,
+        size: pagination.size,
+        categoryId: selectedCategory === 'all' ? undefined : selectedCategory,
+        // search: searchTerm // Add search if supported by backend
+      }
+      const data = await getQuestions(params)
+      setQuestions(data.content || [])
+      setPagination(prev => ({
+        ...prev,
+        totalElements: data.totalElements || 0,
+        totalPages: data.totalPages || 0
+      }))
+    } catch (error) {
+      console.error('Error fetching questions:', error)
+      toast.error('Failed to load questions')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const filteredQuestions = filterStatus === 'all'
-    ? questions
-    : filterStatus === 'needs-review'
-    ? questions.filter(q => q.needsReview)
-    : questions.filter(q => q.status === filterStatus)
+  const fetchAnswers = async () => {
+    setLoading(true)
+    try {
+      const params = {
+        page: answersPagination.page,
+        size: answersPagination.size,
+        status: filterStatus === 'all' ? undefined : filterStatus.toUpperCase()
+      }
+      const data = await getAdminAnswers(params)
+      setAnswers(data.content || [])
+      setAnswersPagination(prev => ({
+        ...prev,
+        totalElements: data.totalElements || 0,
+        totalPages: data.totalPages || 0
+      }))
+    } catch (error) {
+      console.error('Error fetching answers:', error)
+      toast.error('Failed to load answers')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedQuestions = filteredQuestions.slice(startIndex, startIndex + itemsPerPage)
+  const handleDeleteQuestion = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this question?')) return
+    try {
+      await deleteQuestion(id)
+      toast.success('Question deleted successfully')
+      fetchQuestions()
+    } catch (error) {
+      toast.error('Failed to delete question')
+    }
+  }
 
+  const handleApproveAnswer = async (id) => {
+    try {
+      await approveAnswer(id)
+      toast.success('Answer approved')
+      fetchAnswers()
+    } catch (error) {
+      toast.error('Failed to approve answer')
+    }
+  }
 
+  const handleRejectAnswer = async (id) => {
+    const reason = prompt('Enter rejection reason:')
+    if (reason === null) return
+    try {
+      await rejectAnswer(id, reason)
+      toast.success('Answer rejected')
+      fetchAnswers()
+    } catch (error) {
+      toast.error('Failed to reject answer')
+    }
+  }
+
+  const handleDeleteAnswer = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this answer?')) return
+    try {
+      await deleteAnswer(id)
+      toast.success('Answer deleted')
+      fetchAnswers()
+    } catch (error) {
+      toast.error('Failed to delete answer')
+    }
+  }
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return '#dc3545'
-      case 'ai-answered':
-        return '#ffc107'
-      case 'tutor-reviewed':
-        return '#28a745'
-      default:
-        return '#1e3a8a'
+    switch (status?.toLowerCase()) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'approved': return 'bg-green-100 text-green-800'
+      case 'rejected': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold text-blue-900">❓ Q&A Management</h2>
-        <p className="text-gray-600 mt-2">Review AI answers and provide tutor responses</p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#dc3545' }}>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Pending</h3>
-          <p className="text-4xl font-bold" style={{ color: '#dc3545' }}>
-            {questions.filter(q => q.status === 'pending').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#ffc107' }}>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">AI Answered</h3>
-          <p className="text-4xl font-bold" style={{ color: '#ffc107' }}>
-            {questions.filter(q => q.status === 'ai-answered').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#28a745' }}>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Tutor Reviewed</h3>
-          <p className="text-4xl font-bold" style={{ color: '#28a745' }}>
-            {questions.filter(q => q.status === 'tutor-reviewed').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6 border-l-4" style={{ borderLeftColor: '#1e3a8a' }}>
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Needs Review</h3>
-          <p className="text-4xl font-bold text-blue-900">
-            {questions.filter(q => q.needsReview).length}
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-3">
+            <MessageSquare className="w-8 h-8" />
+            Q&A Management
+          </h2>
+          <p className="text-gray-600 mt-2">Manage student questions and tutor answers</p>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-md p-4 flex flex-wrap gap-3">
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200">
         <button
-          onClick={() => setFilterStatus('all')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all border-2 border-blue-900 ${
-            filterStatus === 'all' ? 'bg-blue-900 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-blue-50'
+          onClick={() => { setActiveTab('questions'); setFilterStatus('all'); }}
+          className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+            activeTab === 'questions' ? 'border-blue-900 text-blue-900' : 'border-transparent text-gray-500 hover:text-blue-900'
           }`}
         >
-          All Questions
+          Questions
         </button>
         <button
-          onClick={() => setFilterStatus('needs-review')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all border-2 border-red-600 ${
-            filterStatus === 'needs-review' ? 'bg-red-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-red-50'
+          onClick={() => { setActiveTab('answers'); setFilterStatus('all'); }}
+          className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+            activeTab === 'answers' ? 'border-blue-900 text-blue-900' : 'border-transparent text-gray-500 hover:text-blue-900'
           }`}
         >
-          Needs Review
-        </button>
-        <button
-          onClick={() => setFilterStatus('pending')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all border-2 border-yellow-500 ${
-            filterStatus === 'pending' ? 'bg-yellow-500 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-yellow-50'
-          }`}
-        >
-          Pending
-        </button>
-        <button
-          onClick={() => setFilterStatus('ai-answered')}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all border-2 border-green-600 ${
-            filterStatus === 'ai-answered' ? 'bg-green-600 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-green-50'
-          }`}
-        >
-          AI Answered
+          Answers
         </button>
       </div>
 
-      {/* Questions List */}
-      <div className="space-y-4">
-        {paginatedQuestions.map((q) => (
-          <div
-            key={q.id}
-            className="bg-white rounded-xl shadow-md p-6 border-l-4"
-            style={{ borderLeftColor: getStatusColor(q.status) }}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2 flex-wrap">
-                  <h3 className="text-xl font-bold text-blue-900">{q.subject}</h3>
-                  <span
-                    className="px-3 py-1 rounded-full text-xs font-bold text-white"
-                    style={{ backgroundColor: getStatusColor(q.status) }}
-                  >
-                    {q.status.toUpperCase().replace('-', ' ')}
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: '#eab308', color: 'white' }}>
-                    {q.category}
-                  </span>
-                  {q.needsReview && (
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-500 text-white">
-                      REVIEW NEEDED
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 mb-3">
-                  👨‍🎓 {q.student} • 📅 {q.askedOn}
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <p className="font-semibold text-gray-700 mb-2">Question:</p>
-              <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">{q.question}</p>
-            </div>
-
-            {q.aiAnswer && (
-              <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: '#fefce8' }}>
-                <p className="font-semibold mb-2 text-blue-900">🤖 AI Generated Answer:</p>
-                <p className="text-gray-700">{q.aiAnswer}</p>
-              </div>
-            )}
-
-            {q.tutorAnswer && (
-              <div className="mb-4 p-4 rounded-lg" style={{ backgroundColor: '#e8f5f0' }}>
-                <p className="font-semibold mb-2" style={{ color: '#28a745' }}>
-                  👨‍🏫 Tutor Review by {q.reviewedBy}:
-                </p>
-                <p className="text-gray-700">{q.tutorAnswer}</p>
-              </div>
-            )}
-
-            <div className="flex gap-3 mt-4">
-              {q.needsReview && (
-                <>
-                  <button
-                    className="px-6 py-2 rounded-lg text-white font-semibold hover:opacity-90 transition-all"
-                    style={{ backgroundColor: '#28a745' }}
-                  >
-                    Approve AI Answer
-                  </button>
-                  <button
-                    className="px-6 py-2 rounded-lg text-white font-semibold hover:opacity-90 transition-all bg-blue-900"
-                  >
-                    Add Tutor Review
-                  </button>
-                </>
-              )}
-              <button
-                className="px-6 py-2 rounded-lg font-semibold transition-all border-2"
-                style={{ borderColor: '#1e3a8a', color: '#1e3a8a' }}
-              >
-                View Details
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50"
-            style={{ 
-              backgroundColor: currentPage === 1 ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === 1 ? '#666' : 'white'
-            }}
-          >
-            Previous
-          </button>
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className="px-4 py-2 rounded-lg font-semibold transition-all"
-              style={{
-                backgroundColor: currentPage === index + 1 ? '#1e3a8a' : 'white',
-                color: currentPage === index + 1 ? 'white' : '#1e3a8a',
-                border: '2px solid #1e3a8a'
-              }}
+      {/* Filters & Search */}
+      <div className="bg-white rounded-xl shadow-md p-4 flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder={`Search ${activeTab}...`}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-4">
+          {activeTab === 'questions' && (
+            <select
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              {index + 1}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50"
-            style={{ 
-              backgroundColor: currentPage === totalPages ? '#e0e0e0' : '#1e3a8a',
-              color: currentPage === totalPages ? '#666' : 'white'
-            }}
+              <option value="all">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          )}
+          <select
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 outline-none"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
           >
-            Next
-          </button>
+            <option value="all">All Status</option>
+            {activeTab === 'answers' && (
+              <>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </>
+            )}
+          </select>
         </div>
-      )}
+      </div>
+
+      {/* Content Table */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">Details</th>
+                <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">Category / User</th>
+                <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-sm font-bold text-gray-700 uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="px-6 py-12 text-center">
+                    <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900"></div></div>
+                  </td>
+                </tr>
+              ) : activeTab === 'questions' ? (
+                questions.length === 0 ? (
+                  <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-500">No questions found</td></tr>
+                ) : questions.map((q) => (
+                  <tr key={q.id} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-blue-900 mb-1">{q.title}</div>
+                      <div className="text-sm text-gray-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.descriptionHtml }}></div>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="font-semibold text-gray-700">{q.categoryName || 'General'}</div>
+                      <div className="text-gray-500">{new Date(q.createdAt).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">Question</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => handleDeleteQuestion(q.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                answers.length === 0 ? (
+                  <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-500">No answers found</td></tr>
+                ) : answers.map((a) => (
+                  <tr key={a.id} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-700 line-clamp-2" dangerouslySetInnerHTML={{ __html: a.contentHtml }}></div>
+                      <div className="text-xs text-gray-500 mt-1">On Question: {a.questionTitle || a.questionId}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="font-semibold text-gray-700">{a.authorName || 'Student'}</div>
+                      <div className="text-gray-500">{new Date(a.createdAt).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(a.status)}`}>
+                        {a.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        {a.status === 'PENDING' && (
+                          <>
+                            <button onClick={() => handleApproveAnswer(a.id)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Approve">
+                              <CheckCircle className="w-5 h-5" />
+                            </button>
+                            <button onClick={() => handleRejectAnswer(a.id)} className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Reject">
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                        <button onClick={() => handleDeleteAnswer(a.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {activeTab === 'questions' ? questions.length : answers.length} of {activeTab === 'questions' ? pagination.totalElements : answersPagination.totalElements} entries
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => activeTab === 'questions' ? setPagination(p => ({ ...p, page: p.page - 1 })) : setAnswersPagination(p => ({ ...p, page: p.page - 1 }))}
+              disabled={(activeTab === 'questions' ? pagination.page : answersPagination.page) === 0}
+              className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => activeTab === 'questions' ? setPagination(p => ({ ...p, page: p.page + 1 })) : setAnswersPagination(p => ({ ...p, page: p.page + 1 }))}
+              disabled={(activeTab === 'questions' ? pagination.page : answersPagination.page) >= (activeTab === 'questions' ? pagination.totalPages : answersPagination.totalPages) - 1}
+              className="p-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-100"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

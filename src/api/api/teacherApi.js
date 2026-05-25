@@ -8,7 +8,8 @@ import api from './api';
 export const getPublicTeachers = async () => {
   try {
     const response = await api.get('/api/teachers');
-    return response.data;
+    const teachers = response.data?.content || (Array.isArray(response.data) ? response.data : []);
+    return teachers;
   } catch (error) {
     throw error.response?.data || error;
   }
@@ -31,9 +32,9 @@ export const getPublicTeacherById = async (id) => {
 const ADMIN_TEACHER_BASE_URL = '/api/admin/teachers';
 
 // Get all teachers (Admin)
-export const getAllTeachersAdmin = async () => {
+export const getAllTeachersAdmin = async (params) => {
   try {
-    const response = await api.get(ADMIN_TEACHER_BASE_URL);
+    const response = await api.get(ADMIN_TEACHER_BASE_URL, { params });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

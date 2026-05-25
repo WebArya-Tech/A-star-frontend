@@ -19,4 +19,20 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  // Dev-time proxy to avoid CORS when calling the real backend
+  server: {
+    proxy: {
+      // Proxy /api/* and /admin/api/* to the real API server
+      '/api': {
+        target: 'https://api.astarclasses.com',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/admin': {
+        target: 'https://api.astarclasses.com',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

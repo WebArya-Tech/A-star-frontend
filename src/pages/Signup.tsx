@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 import { useAuth } from "../context/AuthContext.tsx";
 
 const Signup = () => {
@@ -13,6 +14,7 @@ const Signup = () => {
   const [errors, setErrors] = useState<{ name?: string; email?: string; phone?: string; otp?: string; form?: string }>({});
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   const validateForm = () => {
     const validationErrors: { name?: string; email?: string; phone?: string } = {};
@@ -31,12 +33,26 @@ const Signup = () => {
 
     if (!phone.trim()) {
       validationErrors.phone = "Mobile number is required.";
+    } else if (phone.trim().length !== 10) {
+      validationErrors.phone = "Mobile number must be exactly 10 digits.";
+      toast.error("Mobile number must be exactly 10 digits.");
     } else if (!/^\d{10}$/.test(phone.trim())) {
       validationErrors.phone = "Enter a valid 10-digit mobile number.";
+      toast.error("Please enter digits only for the mobile number.");
     }
 
     return validationErrors;
   };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +69,17 @@ const Signup = () => {
       const result = await requestOtp(email.trim(), false);
       if (!result.success) {
         setErrors({ form: result.message || "Unable to send OTP. Please try again." });
+        toast.error(result.message || "Unable to send OTP. Please try again.");
       } else {
         setMessage(result.message || "OTP sent. Check your email.");
+        toast.success("OTP sent successfully to your email!");
         setStep("verify");
+        setResendTimer(300); // 5 minutes
       }
     } catch (error: any) {
-      setErrors({ form: error?.message || "Failed to send OTP. Please try again." });
+      const errorMsg = error?.message || "Failed to send OTP. Please try again.";
+      setErrors({ form: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -72,6 +93,7 @@ const Signup = () => {
       validationErrors.otp = "OTP is required.";
     } else if (!/^\d{6}$/.test(otp.trim())) {
       validationErrors.otp = "OTP must be a 6-digit number.";
+      toast.error("Please enter a valid 6-digit OTP.");
     }
 
     setErrors(validationErrors);
@@ -83,33 +105,51 @@ const Signup = () => {
     try {
       const result = await verifyOtp(email.trim(), otp.trim(), name.trim(), phone.trim());
       if (!result.success) {
-        setErrors({ form: result.message || "OTP verification failed. Please try again." });
+        const errorMsg = result.message || "OTP verification failed. Please try again.";
+        setErrors({ form: errorMsg });
+        toast.error(errorMsg);
       } else {
+        toast.success("Signup successful! Welcome aboard.");
         navigate("/");
       }
     } catch (error: any) {
-      setErrors({ form: error?.message || "OTP verification failed. Please try again." });
+      const errorMsg = error?.message || "OTP verification failed. Please try again.";
+      setErrors({ form: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
     setErrors({});
     setMessage("");
     setIsSubmitting(true);
     try {
-      const result = await requestOtp(email.trim(), true); // This is an explicit resend
+      const result = await requestOtp(email.trim(), true); 
       if (!result.success) {
-        setErrors({ form: result.message || "Unable to resend OTP. Please try again." });
+        const errorMsg = result.message || "Unable to resend OTP. Please try again.";
+        setErrors({ form: errorMsg });
+        toast.error(errorMsg);
       } else {
         setMessage(result.message || "OTP resent. Check your email.");
+        toast.success("OTP resent successfully!");
+        setResendTimer(300); // 5 minutes
       }
     } catch (error: any) {
-      setErrors({ form: error?.message || "Unable to resend OTP. Please try again." });
+      const errorMsg = error?.message || "Unable to resend OTP. Please try again.";
+      setErrors({ form: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -200,10 +240,10 @@ const Signup = () => {
             <button
               type="button"
               onClick={handleResendOtp}
-              disabled={isSubmitting}
-              className="text-sm text-blue-700 hover:underline"
+              disabled={isSubmitting || resendTimer > 0}
+              className={`text-sm font-semibold transition-colors ${resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-700 hover:text-blue-900 hover:underline'}`}
             >
-              Resend OTP
+              {resendTimer > 0 ? `Resend OTP in ${formatTime(resendTimer)}` : 'Resend OTP'}
             </button>
 
             <button

@@ -6,6 +6,7 @@ import logoImage from '../assets/AStarClasses logo (31 March).png';
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mobileDropdown, setMobileDropdown] = useState<string | null>(null);
 
   const subjects = [
     { name: 'Physics', slug: 'physics' },
@@ -33,13 +34,13 @@ const Header = () => {
   ];
 
   return (
-    <header className="bg-white shadow-m ticky top-14 z-40">
+    <header className="bg-white shadow-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo (left) */}
           <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
             <img src={logoImage} alt="A Star Classes Logo" className="h-14 w-14 object-contain" />
-            <span className="text-lg font-bold italic text-gray-900 hidden sm:inline"><strong>A Star Classes</strong></span>
+            <span className="text-lg font-bold italic text-gray-900 inline"><strong>A Star Classes</strong></span>
           </Link>
 
           {/* Navigation (right) */}
@@ -57,6 +58,7 @@ const Header = () => {
               >
                 <button className="flex items-center space-x-1 text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors">
                   <span>IGCSE</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${activeDropdown === 'igcse' ? 'rotate-180' : ''}`} />
                 </button>
                 {activeDropdown === 'igcse' && (
                   <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-20">
@@ -81,6 +83,7 @@ const Header = () => {
               >
                 <button className="flex items-center space-x-1 text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors">
                   <span>AS/A Level</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${activeDropdown === 'asalevel' ? 'rotate-180' : ''}`} />
                 </button>
                 {activeDropdown === 'asalevel' && (
                   <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-20">
@@ -97,19 +100,21 @@ const Header = () => {
                 )}
               </div>
 
-              {/* Blogs link */}
-              <Link to="/blog" className="text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors">
+              <Link to="/tutors" className="text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors">
+                Tutors
+              </Link>
+
+              <Link to="/blog" className="text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors flex items-center gap-1">
                 Blogs
+              </Link>
+
+              <Link to="/reviews" className="text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors flex items-center gap-1">
+                Reviews
               </Link>
 
               {/* Ask link */}
               <Link to="/ask" className="text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors">
                 Ask
-              </Link>
-
-              {/* Tutors link */}
-              <Link to="/tutors" className="text-sm text-gray-700 hover:text-blue-800 font-medium transition-colors">
-                Tutors
               </Link>
 
               {/* Search Bar */}
@@ -134,32 +139,103 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden py-3 border-t border-gray-100 bg-gray-50">
-            <nav className="space-y-2 px-4">
-              <Link to="/" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
+          <div className="lg:hidden py-3 border-t border-gray-100 bg-white">
+            <nav className="space-y-1 px-4">
+              <Link
+                to="/"
+                onClick={() => setIsOpen(false)}
+                className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2.5 rounded-lg text-sm transition-all"
+              >
                 Home
               </Link>
-              <Link to="/igcse" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
-                IGCSE
-              </Link>
-              <Link to="/as-a-level" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
-                AS/A Level
-              </Link>
-              <Link to="/testimonials" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
-                Testimonials
-              </Link>
-              <Link to="/tutors" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
+
+              {/* Mobile IGCSE Dropdown */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => setMobileDropdown(mobileDropdown === 'igcse' ? null : 'igcse')}
+                  className="w-full flex items-center justify-between text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2.5 rounded-lg text-sm transition-all"
+                >
+                  <span>IGCSE</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${mobileDropdown === 'igcse' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileDropdown === 'igcse' && (
+                  <div className="pl-4 space-y-1 bg-gray-50 rounded-lg py-1 mt-1">
+                    {subjects.map((subject) => (
+                      <Link
+                        key={subject.slug}
+                        to={`/igcse/${subject.slug}`}
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-600 hover:text-blue-800 transition-colors"
+                      >
+                        {subject.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile AS/A Level Dropdown */}
+              <div className="space-y-1">
+                <button
+                  onClick={() => setMobileDropdown(mobileDropdown === 'asalevel' ? null : 'asalevel')}
+                  className="w-full flex items-center justify-between text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2.5 rounded-lg text-sm transition-all"
+                >
+                  <span>AS/A Level</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${mobileDropdown === 'asalevel' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileDropdown === 'asalevel' && (
+                  <div className="pl-4 space-y-1 bg-gray-50 rounded-lg py-1 mt-1">
+                    {subjects.map((subject) => (
+                      <Link
+                        key={subject.slug}
+                        to={`/as-a-level/${subject.slug}`}
+                        onClick={() => setIsOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-600 hover:text-blue-800 transition-colors"
+                      >
+                        {subject.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <Link
+                to="/tutors"
+                onClick={() => setIsOpen(false)}
+                className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2.5 rounded-lg text-sm transition-all"
+              >
                 Tutors
               </Link>
-              <Link to="/contact" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
-                Contact Us
-              </Link>
-              <Link to="/blog" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
-                Blogs
-              </Link>
-              <Link to="/ask" className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2 rounded text-sm">
+              <Link
+                to="/ask"
+                onClick={() => setIsOpen(false)}
+                className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2.5 rounded-lg text-sm transition-all"
+              >
                 Ask
               </Link>
+              <Link
+                to="/testimonials"
+                onClick={() => setIsOpen(false)}
+                className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2.5 rounded-lg text-sm transition-all"
+              >
+                Testimonials
+              </Link>
+              <Link
+                to="/contact"
+                onClick={() => setIsOpen(false)}
+                className="block text-gray-700 hover:text-blue-800 hover:bg-blue-50 font-medium px-2 py-2.5 rounded-lg text-sm transition-all"
+              >
+                Contact Us
+              </Link>
+
+              {/* Mobile Search Bar */}
+              <div className="px-2 py-3 mt-2">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                />
+              </div>
             </nav>
           </div>
         )}

@@ -27,10 +27,14 @@ import DemoForm from './components/DemoForm';
 import { SubmitBlogPage } from './components/blog/SubmitBlogPage';
 import { SubscribePage } from './components/blog/SubscribePage';
 import Login from './pages/Login';
+import AdminLogin from './pages/AdminLogin';
 import Signup from './pages/Signup';
 import ResetPassword from './pages/ResetPassword';
 import AdminDashboardPage from './pages/AdminDashboard.tsx';
 import { useAuth } from './context/AuthContext.tsx';
+import RunningClasses from './pages/RunningClasses';
+import WriteReview from './pages/WriteReview';
+import Reviews from './pages/Reviews';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -52,7 +56,7 @@ function AdminRoute({ children }: { children: JSX.Element }) {
   }
 
   if (!isAuthenticated || !isAdmin) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/admin-login" replace />;
   }
 
   return children;
@@ -60,7 +64,7 @@ function AdminRoute({ children }: { children: JSX.Element }) {
 
 function AppLayout() {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin-dashboard');
+  const isAdminRoute = location.pathname.startsWith('/admin-dashboard') || location.pathname === '/admin-login';
 
   return (
     <div className={isAdminRoute ? 'min-h-screen bg-slate-100' : 'min-h-screen bg-gray-50'}>
@@ -71,6 +75,7 @@ function AppLayout() {
           <Route path="/" element={<Home />} />
           <Route path="/demoform" element={<DemoForm />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/tutors" element={<Tutors />} />
@@ -94,6 +99,9 @@ function AppLayout() {
           <Route path="/blog/:slug" element={<BlogDetail />} />
           <Route path="/ask" element={<Ask />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/running-classes" element={<RunningClasses />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/write-review" element={<WriteReview />} />
           <Route
             path="/admin-dashboard"
             element={

@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.DEV ? window.location.origin : 'https://api.astarclasses.com';
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -10,28 +12,31 @@ const api = axios.create({
 // Request interceptor for adding auth headers
 api.interceptors.request.use(
     (config) => {
-        // Skip auth for public routes and initial auth requests
-        const isPublic = config.url.includes('/api/public/') || 
-                        config.url.includes('/api/auth/start') || 
-                        config.url.includes('/api/auth/verify');
-        
-        // Try JWT token from localStorage for both students and admins
         const token = localStorage.getItem('icfy_token');
-        if (token && !isPublic) {
-            config.headers.Authorization = `Bearer ${token}`;
-            return config;
+        const requestUrl = String(config.url || '');
+        let requestPath = requestUrl;
+
+        try {
+            if (requestUrl.startsWith('http')) {
+                requestPath = new URL(requestUrl).pathname;
+            }
+        } catch {
+            requestPath = requestUrl;
         }
 
-        // Only fallback to Basic Auth for the login endpoint if needed, or if specified via env
-        // Otherwise, public routes should not have auth headers.
-        const username = import.meta.env.VITE_ADMIN_USERNAME;
-        const password = import.meta.env.VITE_ADMIN_PASSWORD;
-        
-        // Only use Basic Auth if we're hitting an admin auth endpoint OR if the developer explicitly wants it.
-        if (config.url.includes('/api/admin/') && username && password) {
-            const credentials = btoa(`${username}:${password}`);
-            config.headers.Authorization = `Basic ${credentials}`;
-            return config;
+        const isPublicReviewRoute =
+            (requestPath.startsWith('/api/reviews') && !requestPath.startsWith('/api/reviews/me'));
+
+        // Only attach the token for protected API routes.
+        // Public review endpoints and auth calls should not send stale/invalid auth tokens.
+        if (
+            token &&
+            !requestPath.includes('/public/') &&
+            !requestPath.includes('/api/auth/') &&
+            !requestPath.includes('/auth/') &&
+            !isPublicReviewRoute
+        ) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
 
         return config;
@@ -50,17 +55,27 @@ api.interceptors.response.use(
         console.error('API Response Error:', error.response?.status, error.config?.url);
         console.error('Error data:', error.response?.data);
         console.error('Error message:', error.message);
-        
-        if (error.response?.status === 401) {
-            // Unauthorized - clear auth and let App.jsx handle navigation
+
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            // Clear stale auth tokens when the request is unauthorized or forbidden.
             localStorage.removeItem('icfy_token');
             localStorage.removeItem('icfy_user');
             localStorage.removeItem('icfy_role');
             localStorage.removeItem('adminAuth');
-            // DO NOT use window.location.href as it causes a hard reload that clears state
-            // App.jsx route protection will handle navigation based on auth state change
         }
-        return Promise.reject(error);
+
+        // Normalize error object for components to use easily
+        const normalizedError = {
+            status: error.response?.status,
+            message: error.response?.data?.message ||
+                error.response?.data?.error ||
+                error.response?.data?.errorMessage ||
+                error.message ||
+                'An unexpected error occurred',
+            data: error.response?.data
+        };
+
+        return Promise.reject(normalizedError);
     }
 );
 

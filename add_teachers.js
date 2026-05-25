@@ -2,7 +2,7 @@
 const axios = require('axios');
 
 const api = axios.create({
-    baseURL: 'http://93.127.194.118:9014',
+    baseURL: 'https://api.astarclasses.com',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -50,7 +50,7 @@ const teachers = [
 async function addTeachers() {
     const credentials = Buffer.from('admin:SecureAdmin@2026').toString('base64');
     api.defaults.headers.common['Authorization'] = `Basic ${credentials}`;
-    
+
     console.log('Testing connection to /api/teachers...');
     try {
         const testRes = await api.get('/api/teachers');

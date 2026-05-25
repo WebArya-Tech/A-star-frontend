@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef, type ChangeEvent, type DragEvent, type FormEvent, type SyntheticEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { blogApi } from '../../api/blogApi.ts';
+import { blogApi, getIsLocalMode } from '../../api/blogApi.ts';
 import { Card, Input, TextArea, Button } from '../ui/index.tsx';
 import { ContentEditor } from '../editor/ContentEditor';
-import { PenTool, Mail, CheckCircle, ArrowRight, Save, Upload, X, Image as ImageIcon, ArrowLeft } from 'lucide-react';
+import { PenTool, Mail, CheckCircle, ArrowRight, Save, Upload, X, Image as ImageIcon, ArrowLeft, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const DRAFT_KEY = 'blogpost_draft';
@@ -50,12 +50,14 @@ export const SubmitBlogPage = () => {
     const [formData, setFormData] = useState<SubmitFormData>(emptyForm);
     const [otp, setOtp] = useState('');
     const [draftSavedAt, setDraftSavedAt] = useState<Date | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [imageLoading, setImageLoading] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
     const autoSaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+
+    const [resendTimer, setResendTimer] = useState(0);
 
     // Check for saved draft on mount
     useEffect(() => {
@@ -69,6 +71,23 @@ export const SubmitBlogPage = () => {
             }
         } catch { /* ignore corrupt data */ }
     }, []);
+
+    // Timer logic
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (resendTimer > 0) {
+            interval = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
+
+    const formatResendTimer = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     // Auto-save every 30 seconds when on step 1
     useEffect(() => {
@@ -86,12 +105,14 @@ export const SubmitBlogPage = () => {
         };
     }, [step, formData]);
 
-    // Sync image preview with form data
+    // Sync image previews with form data
     useEffect(() => {
         if (formData.featuredImageUrl) {
-            setImagePreview(formData.featuredImageUrl);
+            // Split by comma if multiple, or just take one
+            const urls = formData.featuredImageUrl.split(',').filter(Boolean);
+            setImagePreviews(urls);
         } else {
-            setImagePreview(null);
+            setImagePreviews([]);
         }
     }, [formData.featuredImageUrl]);
 
@@ -114,30 +135,70 @@ export const SubmitBlogPage = () => {
     const handleStep1 = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         // Validate phone number
-        if (formData.authorMobile.length !== 10) {
-            toast.error('Phone number must be exactly 10 digits');
+        if (!formData.authorMobile || formData.authorMobile.length !== 10) {
+            toast.error('Mobile number must be exactly 10 digits.');
             return;
         }
+        if (!/^\d{10}$/.test(formData.authorMobile)) {
+            toast.error('Please enter a valid 10-digit mobile number (digits only).');
+            return;
+        }
+
         setLoading(true);
         try {
-            await blogApi.startSubmission({
+            const response = await blogApi.startSubmission({
                 authorName: formData.authorName, authorEmail: formData.authorEmail, authorMobile: formData.authorMobile,
                 title: formData.title, excerpt: formData.excerpt, contentHtml: formData.content,
                 tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
-                featuredImageUrl: formData.featuredImageUrl || null,
+                featuredImageUrl: imagePreviews[0] || null, // Send primary as featured
+                additionalImages: imagePreviews.slice(1), // Send others as additional if backend supports
             });
-            toast.success('OTP sent to your email! (Dev: 123456)');
+
+            const data = response?.data || {};
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to send OTP');
+            }
+
+            const otpMessage = 'OTP sent to your email!';
+            toast.success(otpMessage);
             setStep(2);
+            setResendTimer(300); // 5 minutes
         } catch (err) {
             toast.error(getApiErrorMessage(err, 'Submission failed'));
         }
         finally { setLoading(false); }
     };
 
+    const handleResendOtp = async () => {
+        if (resendTimer > 0) return;
+        setLoading(true);
+        try {
+            const response = await blogApi.startSubmission({
+                authorName: formData.authorName, authorEmail: formData.authorEmail, authorMobile: formData.authorMobile,
+                title: formData.title, excerpt: formData.excerpt, contentHtml: formData.content,
+                tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+                featuredImageUrl: imagePreviews[0] || null,
+                additionalImages: imagePreviews.slice(1),
+            });
+            const data = response?.data || {};
+            if (!data.success) throw new Error(data.message || 'Failed to resend OTP');
+            toast.success('OTP resent successfully!');
+            setResendTimer(300); // 5 minutes
+        } catch (err) {
+            toast.error(getApiErrorMessage(err, 'Failed to resend OTP'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleStep2 = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault(); setLoading(true);
         try {
-            await blogApi.verifySubmission({ email: formData.authorEmail, otp });
+            const response = await blogApi.verifySubmission({ email: formData.authorEmail, otp });
+            const data = response?.data || {};
+            if (!data.success) {
+                throw new Error(data.message || 'Invalid OTP');
+            }
             toast.success('Email verified!'); setStep(3);
         }
         catch (err) { toast.error(getApiErrorMessage(err, 'Invalid OTP')); }
@@ -151,7 +212,9 @@ export const SubmitBlogPage = () => {
                 ...formData,
                 email: formData.authorEmail,
                 contentHtml: formData.content, // Map content to contentHtml for backend
-                tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean)
+                tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+                featuredImageUrl: imagePreviews[0] || null,
+                additionalImages: imagePreviews.slice(1)
             });
             clearDraft(); // Clear draft on successful submission
             toast.success('Blog submitted!'); setStep(4);
@@ -173,9 +236,12 @@ export const SubmitBlogPage = () => {
     };
 
     const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        processImageFile(file);
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        
+        Array.from(files).forEach(file => {
+            processImageFile(file);
+        });
 
         // Reset file input for re-upload
         e.target.value = '';
@@ -184,14 +250,14 @@ export const SubmitBlogPage = () => {
     const processImageFile = (file: File) => {
         // Validate file type
         if (!file.type.startsWith('image/')) {
-            toast.error('Please select a valid image file (JPG, PNG, GIF, WebP)');
+            toast.error(`"${file.name}" is not a valid image file`);
             return;
         }
 
         // Validate file size (max 5MB)
         const fileSizeMB = file.size / (1024 * 1024);
         if (fileSizeMB > 5) {
-            toast.error(`File size is ${fileSizeMB.toFixed(1)}MB. Max allowed is 5MB`);
+            toast.error(`"${file.name}" is ${fileSizeMB.toFixed(1)}MB. Max allowed is 5MB`);
             return;
         }
 
@@ -202,9 +268,12 @@ export const SubmitBlogPage = () => {
         reader.onload = (event) => {
             const dataUrl = event.target?.result;
             if (typeof dataUrl === 'string') {
-                setFormData(prev => ({ ...prev, featuredImageUrl: dataUrl }));
-                setImagePreview(dataUrl);
-                toast.success(`Image uploaded! (${fileSizeMB.toFixed(1)}MB)`);
+                setImagePreviews(prev => {
+                    const next = [...prev, dataUrl];
+                    setFormData(f => ({ ...f, featuredImageUrl: next.join(',') }));
+                    return next;
+                });
+                toast.success(`Image added!`);
             }
             setImageLoading(false);
         };
@@ -216,26 +285,26 @@ export const SubmitBlogPage = () => {
     };
 
     const handleUrlChange = (url: string) => {
-        setFormData(prev => ({ ...prev, featuredImageUrl: url }));
-        if (url && url.trim()) {
-            // Validate URL format
-            try {
-                new URL(url);
-                setImagePreview(url);
-            } catch {
-                setImagePreview(null);
-            }
-        } else {
-            setImagePreview(null);
+        if (!url.trim()) return;
+        try {
+            new URL(url);
+            setImagePreviews(prev => {
+                const next = [...prev, url.trim()];
+                setFormData(f => ({ ...f, featuredImageUrl: next.join(',') }));
+                return next;
+            });
+            toast.success('URL added');
+        } catch {
+            toast.error('Invalid URL format');
         }
     };
 
-    const clearImage = () => {
-        setFormData(prev => ({ ...prev, featuredImageUrl: '' }));
-        setImagePreview(null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
+    const removeImage = (index: number) => {
+        setImagePreviews(prev => {
+            const next = prev.filter((_, i) => i !== index);
+            setFormData(f => ({ ...f, featuredImageUrl: next.join(',') }));
+            return next;
+        });
         toast.success('Image removed');
     };
 
@@ -263,7 +332,7 @@ export const SubmitBlogPage = () => {
         }
     };
 
-    const formatTime = (date: Date | null) => {
+    const formatDraftTime = (date: Date | null) => {
         if (!date) return '';
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
@@ -273,19 +342,22 @@ export const SubmitBlogPage = () => {
             <Link to="/blog" className="inline-flex items-center gap-2 text-base font-medium text-[#4f6079] hover:text-text-primary transition-colors mb-6">
                 <ArrowLeft className="w-4 h-4" /> Back to Blog
             </Link>
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-[-0.03em] text-text-primary mb-2">Submit Your Blog</h1>
-            <p className="text-lg text-text-secondary mb-14">Share your knowledge with our community</p>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-[-0.03em] text-text-primary mb-2">
+                Submit Your Blog
+            </h1>
+            <p className="text-lg text-text-secondary mb-6">Share your knowledge with our community</p>
+
 
             {/* Steps */}
-            <div className="flex items-center justify-center gap-5 mb-12">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-5 mb-12 overflow-hidden px-2">
                 {[1, 2, 3].map((s) => (
-                    <div key={s} className="flex items-center gap-3">
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center text-[17px] font-bold transition-all ${step >= s ? 'bg-[#19788f] text-white' : 'bg-[#d9dde3] text-[#667085]'
+                    <div key={s} className="flex items-center gap-1 sm:gap-3 shrink-0">
+                        <div className={`w-7 h-7 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-xs sm:text-[17px] font-bold transition-all ${step >= s ? 'bg-[#19788f] text-white' : 'bg-[#d9dde3] text-[#667085]'
                             }`}>{step > s ? '✓' : s}</div>
-                        <span className={`text-base font-semibold ${step >= s ? 'text-[#19788f]' : 'text-[#667085]'}`}>
+                        <span className={`text-[10px] sm:text-base font-semibold ${step >= s ? 'text-[#19788f]' : 'text-[#667085]'}`}>
                             {s === 1 ? 'Write' : s === 2 ? 'Verify' : 'Submit'}
                         </span>
-                        {s < 3 && <div className={`w-16 h-[2px] ${step > s ? 'bg-[#19788f]' : 'bg-[#c9ced6]'}`} />}
+                        {s < 3 && <div className={`w-4 sm:w-16 h-[2px] ${step > s ? 'bg-[#19788f]' : 'bg-[#c9ced6]'}`} />}
                     </div>
                 ))}
             </div>
@@ -300,7 +372,7 @@ export const SubmitBlogPage = () => {
                         <div className="flex items-center gap-2">
                             {draftSavedAt && (
                                 <span className="text-xs text-text-tertiary hidden sm:inline">
-                                    Saved {formatTime(draftSavedAt)}
+                                    Saved {formatDraftTime(draftSavedAt)}
                                 </span>
                             )}
                             <button type="button" onClick={() => saveDraft(false)}
@@ -330,33 +402,37 @@ export const SubmitBlogPage = () => {
 
                         <Input label="Tags (comma separated)" placeholder="spring-boot, java, tutorial" value={formData.tags} onChange={update('tags')} />
 
-                        {/* Featured Image Upload Section */}
                         <div className="space-y-3">
-                            <label className="block text-sm font-medium text-text-secondary">Featured Image (optional)</label>
+                            <label className="block text-sm font-medium text-text-secondary">Blog Images (First image is featured)</label>
 
-                            {/* Image Preview */}
-                            {imagePreview && (
-                                <div className="relative w-full rounded-lg overflow-hidden bg-bg-tertiary border-2 border-bg-hover">
-                                    <img
-                                        src={imagePreview}
-                                        alt="Preview"
-                                        className="w-full h-48 object-cover"
-                                        onError={(e: SyntheticEvent<HTMLImageElement>) => {
-                                            e.currentTarget.style.display = 'none';
-                                            toast.error('Invalid image URL');
-                                        }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={clearImage}
-                                        className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg"
-                                        title="Remove image"
-                                    >
-                                        <X size={18} />
-                                    </button>
-                                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white px-3 py-1 rounded text-xs">
-                                        Image Ready
-                                    </div>
+                            {/* Image Gallery */}
+                            {imagePreviews.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {imagePreviews.map((url, index) => (
+                                        <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-bg-tertiary border border-border-primary group">
+                                            <img
+                                                src={url}
+                                                alt={`Preview ${index + 1}`}
+                                                className="w-full h-full object-cover"
+                                                onError={(e: SyntheticEvent<HTMLImageElement>) => {
+                                                    e.currentTarget.src = 'https://via.placeholder.com/400x225?text=Invalid+Image';
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(index)}
+                                                className="absolute top-1 right-1 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                                                title="Remove image"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                            {index === 0 && (
+                                                <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] py-0.5 text-center font-bold">
+                                                    FEATURED
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             )}
 
@@ -365,85 +441,62 @@ export const SubmitBlogPage = () => {
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
-                                className={`border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer ${isDragOver
+                                onClick={() => fileInputRef.current?.click()}
+                                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${isDragOver
                                     ? 'border-text-secondary bg-bg-secondary'
-                                    : 'border-border-primary bg-bg-primary hover:border-text-secondary'
+                                    : 'border-border-primary bg-bg-primary hover:border-text-secondary hover:bg-bg-tertiary'
                                     }`}
                             >
-                                <div className="flex flex-col items-center gap-2">
-                                    <ImageIcon size={32} className="text-text-tertiary" />
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="p-3 rounded-full bg-bg-secondary text-text-tertiary group-hover:text-text-primary transition-colors">
+                                        <ImageIcon size={28} />
+                                    </div>
                                     <div>
-                                        <p className="text-sm font-medium text-text-primary">
-                                            Drag & Drop Image Here
+                                        <p className="text-sm font-semibold text-text-primary">
+                                            Click to upload or drag and drop
                                         </p>
                                         <p className="text-xs text-text-tertiary mt-1">
-                                            or click below to choose
+                                            JPG, PNG, WebP up to 5MB (Multiple allowed)
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Upload Options */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {/* File Upload Button */}
-                                <button
-                                    type="button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={imageLoading}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-text-secondary hover:bg-opacity-90 text-bg-primary border border-text-secondary rounded-lg transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {imageLoading ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-bg-primary border-t-transparent rounded-full animate-spin"></div>
-                                            Processing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Upload size={16} />
-                                            Choose from Device
-                                        </>
-                                    )}
-                                </button>
-
-                                {/* Hidden File Input */}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageUpload}
-                                    className="hidden"
-                                    aria-label="Upload featured image"
-                                    disabled={imageLoading}
-                                />
-
-                                {/* Gallery Info */}
-                                <div className="px-4 py-3 bg-bg-secondary border border-border-primary rounded-lg flex items-center justify-center text-text-tertiary font-medium text-sm">
-                                    <ImageIcon size={16} className="mr-2" />
-                                    Gallery Ready
-                                </div>
-                            </div>
+                            {/* Hidden File Input */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleImageUpload}
+                                className="hidden"
+                            />
 
                             {/* URL Input Option */}
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-text-secondary">Or paste image URL:</label>
+                            <div className="flex gap-2">
                                 <input
                                     type="url"
-                                    placeholder="https://example.com/image.jpg"
-                                    value={formData.featuredImageUrl.startsWith('data:') ? '' : formData.featuredImageUrl}
-                                    onChange={(e) => handleUrlChange(e.target.value)}
-                                    disabled={imageLoading}
-                                    className="w-full px-4 py-2.5 text-sm border border-border-primary rounded-lg bg-bg-primary text-text-primary placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-text-secondary focus:border-transparent transition-all disabled:opacity-50"
+                                    placeholder="Or paste image URL here..."
+                                    className="input-clean flex-1 text-sm"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleUrlChange((e.target as HTMLInputElement).value);
+                                            (e.target as HTMLInputElement).value = '';
+                                        }
+                                    }}
                                 />
-                            </div>
-
-                            <div className="bg-bg-secondary rounded-lg p-3 space-y-1">
-                                <p className="text-xs font-medium text-text-primary">Supported Formats & Tips:</p>
-                                <ul className="text-xs text-text-tertiary space-y-1 list-disc list-inside">
-                                    <li>JPG, PNG, GIF, WebP</li>
-                                    <li>Max size: 5MB</li>
-                                    <li>Recommended: 1200x800px or larger</li>
-                                    <li>Upload or paste URL - both work</li>
-                                </ul>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                                        handleUrlChange(input.value);
+                                        input.value = '';
+                                    }}
+                                    className="px-4 py-2 bg-bg-tertiary hover:bg-bg-hover text-text-secondary text-xs font-bold rounded-lg transition-colors border border-border-primary"
+                                >
+                                    Add URL
+                                </button>
                             </div>
                         </div>
 
@@ -459,11 +512,33 @@ export const SubmitBlogPage = () => {
                     <Mail className="w-12 h-12 mx-auto text-text-tertiary mb-3" />
                     <h2 className="text-xl font-bold text-text-primary mb-1">Verify Your Email</h2>
                     <p className="text-text-secondary mb-2 text-sm">OTP sent to <strong>{formData.authorEmail}</strong></p>
-                    {/* <p className="text-xs text-text-tertiary mb-6 bg-bg-secondary rounded p-2">📌 Dev OTP: <strong>123456</strong></p> */}
+                    {/* OTP verification message */}
                     <form onSubmit={handleStep2} className="max-w-xs mx-auto space-y-4">
-                        <Input placeholder="Enter 6-digit OTP" value={otp} onChange={(e: ChangeEvent<HTMLInputElement>) => setOtp(e.target.value)}
-                            className="text-center text-xl tracking-widest" maxLength={6} required />
+                        <Input 
+                            placeholder="Enter 6-digit OTP" 
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={otp} 
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                setOtp(val);
+                            }}
+                            className="text-center text-xl tracking-widest" 
+                            maxLength={6} 
+                            required 
+                        />
                         <Button type="submit" disabled={loading} className="w-full">{loading ? 'Verifying...' : 'Verify OTP'}</Button>
+                        <div className="text-center">
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                disabled={loading || resendTimer > 0}
+                                className={`text-sm font-semibold transition-colors ${resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-[#19788f] hover:text-[#166b7f] underline'}`}
+                            >
+                                {resendTimer > 0 ? `Resend OTP in ${formatResendTimer(resendTimer)}` : 'Resend OTP'}
+                            </button>
+                        </div>
                         <button type="button" onClick={() => setStep(1)} className="w-full pt-2 text-sm text-text-tertiary hover:text-text-primary font-medium flex items-center justify-center gap-1 transition-colors">
                             <ArrowLeft className="w-4 h-4" /> Back to Writing
                         </button>

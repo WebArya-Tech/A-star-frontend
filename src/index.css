@@ -4,6 +4,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom scrollbar for premium modals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 :root {
   --blog-bg-primary: #f4f6f8;
   --blog-bg-secondary: #f8fafc;
@@ -173,6 +189,9 @@ button,
   .blog-content {
     color: var(--blog-copy);
     line-height: 1.8;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
   }
 
   .blog-content h1,

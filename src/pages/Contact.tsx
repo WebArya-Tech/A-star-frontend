@@ -3,8 +3,28 @@ import { useSearchParams } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, Send, MessageSquare, Calendar } from 'lucide-react';
 import { FaWhatsapp, FaLinkedin, FaYoutube, FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
-import { contactApi, type ContactSubject } from '../api/contactApi';
+import { getContactSubjects, submitContactForm, getContactSettingsPublic } from '../api/api/contactApi';
 import toast from 'react-hot-toast';
+import CenteredModal from '../components/CenteredModal';
+
+interface ContactSubject {
+  id: string;
+  name: string;
+  displayName?: string;
+}
+
+interface ContactSettings {
+  phoneNumber: string;
+  whatsappNumber: string;
+  emailAddress: string;
+  officeAddress: string;
+  officeHours: string;
+  googleMapsUrl: string;
+  facebookUrl: string;
+  instagramUrl: string;
+  linkedinUrl: string;
+  twitterUrl: string;
+}
 
 const Contact = () => {
   const [searchParams] = useSearchParams();
@@ -18,20 +38,40 @@ const Contact = () => {
   });
 
   const [subjects, setSubjects] = useState<ContactSubject[]>([]);
+  const [settings, setSettings] = useState<ContactSettings | null>(null);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
 
   useEffect(() => {
-    const loadSubjects = async () => {
+    const loadData = async () => {
+      const fallbackSubjects: ContactSubject[] = [
+        { id: "69f59c3b7fba777198d8f385", name: "Course Inquiry" },
+        { id: "69f59c3b7fba777198d8f386", name: "Fees & Payments" },
+        { id: "69f59c3b7fba777198d8f387", name: "Technical Support" },
+        { id: "69f59c3b7fba777198d8f388", name: "Partnership" },
+        { id: "69f59c3b7fba777198d8f389", name: "Other" }
+      ];
+
       try {
-        const data = await contactApi.getSubjects();
-        setSubjects(data);
+        const [subjectsData, settingsData] = await Promise.all([
+          getContactSubjects(),
+          getContactSettingsPublic()
+        ]);
+
+        // Handle data nesting if API returns { data: [...] }
+        const finalSubjects = Array.isArray(subjectsData)
+          ? subjectsData
+          : (subjectsData?.data || fallbackSubjects);
+
+        setSubjects(finalSubjects);
+        setSettings(settingsData);
       } catch (error) {
-        console.error('Failed to load contact subjects:', error);
+        console.error('Failed to load contact data:', error);
+        setSubjects(fallbackSubjects);
       } finally {
         setLoadingSubjects(false);
       }
     };
-    loadSubjects();
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -60,12 +100,33 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      await contactApi.submitForm(formData);
+      // Strict phone validation: must be exactly 10 digits
+      if (formData.phoneNumber) {
+        if (formData.phoneNumber.length < 10) {
+          toast.error('Mobile number is too short. It must be exactly 10 digits.');
+          setIsSubmitting(false);
+          return;
+        }
+        if (formData.phoneNumber.length > 10) {
+          toast.error('Mobile number is too long. It must be exactly 10 digits.');
+          setIsSubmitting(false);
+          return;
+        }
+        if (!/^\d{10}$/.test(formData.phoneNumber)) {
+          toast.error('Please enter a valid 10-digit mobile number (digits only).');
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      await submitContactForm(formData);
+
       setSubmitted(true);
-      toast.success('Message sent successfully!');
-    } catch (error) {
+      toast.success('✅ Message sent successfully! We will contact you soon.');
+    } catch (error: any) {
       console.error('Form submission error:', error);
-      toast.error('Failed to send message. Please try again.');
+      const errorMsg = error.message || 'Failed to send message. Please try again.';
+      toast.error(`❌ ${errorMsg}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -75,32 +136,38 @@ const Contact = () => {
     {
       icon: <Phone className="h-6 w-6 text-blue-600" />,
       title: "Phone Number",
-      details: ["+91-886 191 9000"],
-      action: "tel:+918861919000"
+      details: [settings?.phoneNumber || "+91-886 191 9000"],
+      action: `tel:${(settings?.phoneNumber || "+918861919000").replace(/[\s-]/g, '')}`
     },
     {
       icon: <FaWhatsapp className="h-6 w-6 text-green-600" />,
       title: "WhatsApp Number",
-      details: ["+91-886 191 9000"],
-      action: "https://wa.me/918861919000"
+      details: [settings?.whatsappNumber || "+91-807 398 2848"],
+      action: `https://wa.me/${(settings?.whatsappNumber || "918073982848").replace(/\D/g, '')}`
+    },
+    {
+      icon: <Mail className="h-6 w-6 text-blue-600" />,
+      title: "Email Address",
+      details: [settings?.emailAddress || "info@astarclasses.com"],
+      action: `mailto:${settings?.emailAddress || "info@astarclasses.com"}`
     },
     {
       icon: <MapPin className="h-6 w-6 text-blue-600" />,
       title: "Address",
-      details: [
+      details: settings?.officeAddress ? [settings.officeAddress] : [
         "DronaVyas Ixpoe Private Limited",
         "A Star Classes",
-        "No. 81, Ground Floor, Shar Space",
+        "No. 81, Ground Floor, Share Space",
         "Borewell Road, Nallurahalli, Whitefield",
         "Bangalore - 560066, Karnataka",
         "GST Number: 29AAECD7872Q1ZO"
       ],
-      action: null
+      action: settings?.googleMapsUrl || null
     },
     {
       icon: <Clock className="h-6 w-6 text-blue-600" />,
       title: "Office Hours",
-      details: [
+      details: settings?.officeHours ? [settings.officeHours] : [
         "Monday - Friday: 10:00 AM - 6:00 PM",
         "Saturday-Sunday: Closed"
       ],
@@ -120,7 +187,7 @@ const Contact = () => {
       icon: <MessageSquare className="h-8 w-8 text-white" />,
       title: "WhatsApp",
       description: "Chat with us instantly",
-      action: "https://wa.me/918861919000",
+      action: "https://wa.me/918073982848",
       color: "bg-green-600 hover:bg-green-700"
     },
     {
@@ -132,17 +199,19 @@ const Contact = () => {
     }
   ];
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Send className="w-8 h-8 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Message Sent Successfully!</h2>
-          <p className="text-gray-600 mb-6">
-            Thank you for contacting A Star Classes. We'll get back to you within 24 hours.
-          </p>
+
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <CenteredModal open={submitted} onClose={() => setSubmitted(false)} title={"Message Sent Successfully!"}>
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Send className="w-8 h-8 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">Message Sent Successfully!</h2>
+        <p className="text-gray-600 mb-6 text-center">
+          Thank you for contacting A Star Classes. We'll get back to you within 24 hours.
+        </p>
+        <div className="text-center">
           <button
             onClick={() => {
               setSubmitted(false);
@@ -153,12 +222,7 @@ const Contact = () => {
             Send Another Message
           </button>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+      </CenteredModal>
       {/* Hero Section (hidden to match provided design) */}
       {/*
       {!isDirect && (
@@ -370,7 +434,7 @@ const Contact = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Find Us</h3>
                 <div className="bg-gray-100 rounded-lg h-64 overflow-hidden">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.4086849004847!2d77.7233037!3d12.9732394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae182ca143b6cb%3A0xe0e4c8f6c2af4a6e!2sWhitefield%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1700000000000"
+                    src={settings?.googleMapsUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.4086849004847!2d77.7233037!3d12.9732394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae182ca143b6cb%3A0xe0e4c8f6c2af4a6e!2sWhitefield%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1700000000000"}
                     width="100%"
                     height="100%"
                     loading="lazy"
@@ -382,7 +446,7 @@ const Contact = () => {
                 <div className="mt-4 text-gray-600 text-sm">
                   <p>A Star Classes</p>
                   <p>DronaVyas Ixpoe Private Limited</p>
-                  <p>No. 81, Ground Floor, Shar Space</p>
+                  <p>No. 81, Ground Floor, Share Space</p>
                   <p>Borewell Road, Nallurahalli, Whitefield</p>
                   <p>Bangalore - 560066</p>
                   <p>Karnataka, India</p>

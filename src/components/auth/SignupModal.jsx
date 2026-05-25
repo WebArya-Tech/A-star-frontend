@@ -32,6 +32,11 @@ export default function SignupModal({ isOpen, onClose, onOpenLogin }) {
       return
     }
 
+    if (!signupData.phone || !/^\d{10}$/.test(signupData.phone)) {
+      setError('Please enter a valid 10-digit mobile number')
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -130,7 +135,8 @@ export default function SignupModal({ isOpen, onClose, onOpenLogin }) {
                 id="signup-phone"
                 required
                 value={signupData.phone}
-                onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
+                onChange={(e) => setSignupData({ ...signupData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                maxLength={10}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-yellow-400 transition text-gray-800"
                 placeholder="Enter your phone number"
               />

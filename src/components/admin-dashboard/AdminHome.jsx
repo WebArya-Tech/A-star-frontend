@@ -1,5 +1,5 @@
-﻿import React, { useMemo } from 'react';
-import { Users, BookOpen, GraduationCap, FileText, DollarSign, MessageSquare, ClipboardList, Bell, BarChart2, Star, HelpCircle, FlaskConical, Newspaper } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Users, BookOpen, GraduationCap, FileText, DollarSign, MessageSquare, ClipboardList, Bell, BarChart2, Star, HelpCircle, FlaskConical, Newspaper, Folder } from 'lucide-react';
 
 const getStats = () => {
   try {
@@ -42,6 +42,7 @@ export default function AdminHome({ setCurrentView }) {
     { id: 'practice-tests', label: 'Practice Tests', icon: FlaskConical, description: 'Create & manage tests' },
     { id: 'announcements', label: 'Announcements', icon: Bell, description: 'Post announcements to students' },
     { id: 'questions', label: 'Q&A Management', icon: HelpCircle, description: 'Answer student questions' },
+    { id: 'categories', label: 'Categories', icon: Folder, description: 'Manage categories' },
     { id: 'feedback', label: 'Feedback', icon: MessageSquare, description: 'View & respond to reviews' },
     { id: 'testimonials', label: 'Testimonials', icon: Star, description: 'Moderate testimonial submissions' },
     { id: 'blog', label: 'Blog', icon: Newspaper, description: 'Manage blog posts & subscribers' },

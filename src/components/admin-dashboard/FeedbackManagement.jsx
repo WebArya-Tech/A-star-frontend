@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import Pagination from '../ui/Pagination';
 
 const SAMPLE_FEEDBACK = [
   { id: 1, studentName: 'Rahul Sharma', course: 'Mathematics', rating: 5, message: 'Excellent teaching methodology! Concepts are very clear.', response: null, date: '2026-02-18' },
@@ -16,6 +17,12 @@ export default function FeedbackManagement() {
   const [feedbacks, setFeedbacks] = useState(loadFeedback);
   const [showReplyForm, setShowReplyForm] = useState(null);
   const [reply, setReply] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
+
+  const totalPages = Math.ceil(feedbacks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedFeedbacks = feedbacks.slice(startIndex, startIndex + itemsPerPage);
 
   // Reload from localStorage on mount
   useEffect(() => {
@@ -53,7 +60,7 @@ export default function FeedbackManagement() {
           <div className="text-gray-600 text-center py-8">No feedback found.</div>
         ) : (
           <div className="space-y-4">
-            {feedbacks.map((f) => (
+            {paginatedFeedbacks.map((f) => (
               <div key={f.id} className="border rounded-lg p-4 hover:shadow-md transition">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-2">
                   <div className="flex-1">
@@ -117,6 +124,14 @@ export default function FeedbackManagement() {
             ))}
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={feedbacks.length}
+          itemsPerPage={itemsPerPage}
+          alwaysShow={true}
+        />
       </div>
     </div>
   );

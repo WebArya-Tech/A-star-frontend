@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from 'react';
-import { blogApi, adminApi } from '../../api/blogApi';
+import { useState, useEffect } from 'react';
+import { blogApi, adminApi, getIsLocalMode } from '../../api/blogApi';
 import { CheckCircle, XCircle, Edit3, Eye, X, ArrowLeft, Save, AlertTriangle, Trash2, MessageSquare } from 'lucide-react';
 import React from 'react';
 
@@ -210,10 +210,42 @@ export const BlogModerationPage = ({ onBack }) => {
                     {isEditing ? (
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-sm font-medium text-text-secondary mb-1.5">Featured Image URL</label>
-                                <Input value={editForm.featuredImageUrl} onChange={(e) => setEditForm({ ...editForm, featuredImageUrl: e.target.value })} placeholder="https://images.unsplash.com/..." />
+                                <label className="block text-sm font-medium text-text-secondary mb-1.5">Featured Image</label>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <Input value={editForm.featuredImageUrl} onChange={(e) => setEditForm({ ...editForm, featuredImageUrl: e.target.value })} placeholder="https://images.unsplash.com/..." />
+                                    </div>
+                                    <label className="shrink-0 cursor-pointer">
+                                        <div className="px-4 py-2 bg-blue-900 text-white text-xs font-bold rounded-lg hover:bg-blue-800 transition shadow-sm">
+                                            Upload File
+                                        </div>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    const reader = new FileReader();
+                                                    reader.onloadend = () => {
+                                                        setEditForm({ ...editForm, featuredImageUrl: reader.result });
+                                                    };
+                                                    reader.readAsDataURL(file);
+                                                }
+                                            }}
+                                        />
+                                    </label>
+                                </div>
                                 {editForm.featuredImageUrl && (
-                                    <img src={editForm.featuredImageUrl} alt="Preview" className="w-full h-48 object-cover rounded-xl mt-3 border border-border-secondary" />
+                                    <div className="relative mt-3">
+                                        <img src={editForm.featuredImageUrl} alt="Preview" className="w-full h-48 object-cover rounded-xl border border-border-secondary" />
+                                        <button 
+                                            onClick={() => setEditForm({ ...editForm, featuredImageUrl: '' })}
+                                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full shadow-lg"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                             <div>
@@ -366,7 +398,9 @@ export const BlogModerationPage = ({ onBack }) => {
                         <ArrowLeft className="w-4 h-4" /> Back to Blog Dashboard
                     </button>
                 )}
-                <h1 className="text-3xl font-bold text-text-primary mb-1">Blog Moderation</h1>
+                <h1 className="text-3xl font-bold text-text-primary mb-1">
+                    Blog Moderation
+                </h1>
                 <p className="text-gray-500 text-sm">Review, approve, and manage blog submissions</p>
             </div>
             <div className="flex flex-wrap gap-2 mb-6">

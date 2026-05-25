@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Phone } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -14,7 +14,7 @@ const TopBar = () => {
         <div className="flex items-center gap-6">
           {/* Phone Icon */}
           <a
-            href="tel:8861919000"
+            href="tel:8073982848"
             className="inline-flex items-center gap-1 hover:text-[#FFD600] transition"
             title="Call us"
           >
@@ -24,49 +24,51 @@ const TopBar = () => {
 
           {/* WhatsApp Icon */}
           <a
-            href="https://wa.me/918073539524"
+            href="https://wa.me/918073982848"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-green-400 hover:text-green-300 transition"
             title="WhatsApp us"
           >
             <FaWhatsapp className="h-6 w-6" />
-            <span className="text-sm font-medium hidden xl:inline">+91-807 353 9524</span>
+            <span className="text-sm font-medium hidden xl:inline">+91-807 398 2848</span>
           </a>
         </div>
 
         {/* Center/Right: Navigation & Actions (hidden on small screens) */}
         <div className="hidden md:flex items-center gap-4 flex-1 justify-end">
+          <Link
+            to="/running-classes"
+            className="bg-[#FFD600] text-gray-900 px-3 py-1 rounded-lg text-xs font-bold hover:bg-yellow-400 transition flex items-center gap-1.5"
+          >
+            Running Classes
+          </Link>
           <Link to="/testimonials" className="text-xs font-medium hover:text-[#FFD600] transition">
             Testimonials
           </Link>
           <Link to="/contact" className="text-xs font-medium hover:text-[#FFD600] transition">
             Contact Us
           </Link>
-          <Link to="/blog" className="text-xs font-medium hover:text-[#FFD600] transition">
-            Blogs
-          </Link>
+          <a
+            href="https://www.ixpoe.com/ixpoe/feepay"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium hover:text-[#FFD600] transition flex items-center gap-1"
+          >
+            💳 Pay Fees
+          </a>
           <Link
             to="/demoform"
-            className="bg-[#0056b3] text-white px-3 py-1 rounded text-xs font-semibold hover:bg-[#007bff] transition"
+            className="bg-[#0056b3] text-white px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-[#007bff] transition shadow-lg shadow-blue-900/20"
           >
             Schedule Demo
           </Link>
           <Link
             to="/login"
-            className="text-xs text-[#FFD600] font-semibold hover:text-white transition"
+            className="text-xs text-[#FFD600] font-bold hover:text-white transition ml-2"
           >
             Login
           </Link>
-          {/* Sign Up removed from top bar per request (hidden from users) */}
-          {false && (
-            <Link
-              to="/signup"
-              className="text-xs bg-white text-[#003366] px-3 py-1 rounded font-semibold hover:bg-[#FFD600] transition"
-            >
-              Sign Up
-            </Link>
-          )}
         </div>
 
         {/* Mobile menu button */}
@@ -90,12 +92,14 @@ const TopBar = () => {
         <div className="md:hidden bg-[#003366] border-t border-[#002244] px-4 py-3">
           <div className="space-y-3 max-w-md">
             <div className="flex gap-4 pb-3 border-b border-[#002244]">
-              <a href="tel:8861919000" className="flex-1 text-center text-[#FFD600] font-bold text-xs">☎️ Call</a>
-              <a href="https://wa.me/918073539524" target="_blank" rel="noopener noreferrer" className="flex-1 text-center text-[#FFD600] font-bold text-xs">💬 WhatsApp</a>
+              <a href="tel:8073982848" className="flex-1 text-center text-[#FFD600] font-bold text-xs">☎️ Call</a>
+              <a href="https://wa.me/918073982848" target="_blank" rel="noopener noreferrer" className="flex-1 text-center text-[#FFD600] font-bold text-xs">💬 WhatsApp</a>
             </div>
-            <Link to="/demoform" className="block bg-[#0056b3] text-white px-3 py-2 rounded text-xs font-semibold">Schedule Demo</Link>
+            <Link to="/demoform" className="block bg-[#0056b3] text-white px-3 py-2 rounded text-xs font-semibold text-center">Schedule Demo</Link>
+            <a href="https://www.ixpoe.com/ixpoe/feepay" target="_blank" rel="noopener noreferrer" className="block bg-[#d5a928] text-white px-3 py-2 rounded text-xs font-semibold text-center">Pay Fees</a>
             <Link to="/testimonials" className="block text-white text-xs hover:text-[#FFD600]">Testimonials</Link>
             <Link to="/contact" className="block text-white text-xs hover:text-[#FFD600]">Contact Us</Link>
+            <Link to="/running-classes" className="block text-white text-xs hover:text-[#FFD600]">Running Classes</Link>
             <Link to="/blog" className="block text-white text-xs hover:text-[#FFD600]">Blogs</Link>
             <Link to="/login" className="block text-[#FFD600] text-xs font-semibold">Login</Link>
             {/* Sign Up removed from mobile menu as well */}

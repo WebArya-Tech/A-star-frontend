@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import toast from 'react-hot-toast';
 import { clearActiveApiBaseUrl } from '../api/runtimeApiBase.ts';
-import { adminLogin as apiAdminLogin, requestUserOTP, verifyUserOTP, logout as apiLogout } from '../api/api/authApi.js';
+import { adminLogin as apiAdminLogin, loginWithPassword as apiUserLogin, requestUserOTP, verifyUserOTP, logout as apiLogout } from '../api/api/authApi.js';
 
 type User = {
     id: string;
@@ -57,22 +58,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = async (email: string, password: string): Promise<AuthResult> => {
         try {
-            const result = await apiAdminLogin(email, password);
-            if (result.token) {
-                const adminUser: User = {
-                    id: result.user?.id || 'admin-id',
-                    fullName: result.user?.name || 'Administrator',
-                    email: result.email || email,
-                    role: 'admin',
-                };
-                setUser(adminUser);
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(adminUser));
-                localStorage.setItem(ROLE_STORAGE_KEY, 'admin');
-                return { success: true, isAdmin: true };
+            // Try admin login first if it looks like an admin email or just try both
+            try {
+                const result = await apiAdminLogin(email, password);
+                if (result.token) {
+                    const adminUser: User = {
+                        id: result.user?.id || 'admin-id',
+                        fullName: result.user?.name || 'Administrator',
+                        email: result.email || email,
+                        role: 'admin',
+                    };
+                    setUser(adminUser);
+                    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(adminUser));
+                    localStorage.setItem(ROLE_STORAGE_KEY, 'admin');
+                    return { success: true, isAdmin: true };
+                }
+            } catch {
+                // If admin login fails, try user login
+                console.log('Admin login failed, trying user login...');
+                const result = await apiUserLogin(email, password);
+                if (result.token) {
+                    const studentUser: User = {
+                        id: result.user?.id || 'user-id',
+                        fullName: result.user?.name || result.user?.fullName || 'Student',
+                        email: result.user?.email || email,
+                        role: 'student',
+                    };
+                    setUser(studentUser);
+                    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(studentUser));
+                    localStorage.setItem(ROLE_STORAGE_KEY, 'student');
+                    return { success: true, isAdmin: false };
+                }
             }
             return { success: false, message: 'Invalid credentials' };
         } catch (error: any) {
-            console.error('Admin login failed:', error);
+            console.error('Login failed:', error);
             return { 
                 success: false, 
                 message: error.message || error.error || 'Invalid email or password' 
@@ -122,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(ROLE_STORAGE_KEY);
         localStorage.removeItem('adminAuth');
         clearActiveApiBaseUrl();
+        toast.success('Logged out successfully. See you again!');
     };
 
     const value = useMemo<AuthContextValue>(() => ({

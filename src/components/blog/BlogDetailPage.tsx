@@ -119,7 +119,10 @@ export const BlogDetailPage = () => {
             toast.success('Comment posted!');
             setCommentForm({ name: '', commentText: '', honeypot: '' });
             loadComments(blog.id);
-        } catch (err) { toast.error(getApiErrorMessage(err, 'Failed to post comment')); }
+        } catch (err) { 
+            console.error('Comment submission error:', err);
+            toast.error(getApiErrorMessage(err, 'Failed to post comment. Please try again.')); 
+        }
         finally { setSubmitting(false); }
     };
 

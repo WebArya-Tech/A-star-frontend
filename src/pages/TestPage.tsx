@@ -239,7 +239,7 @@ const TestPage = () => {
                 Start Free Diagnostic
               </Link>
               <button
-                onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+                onClick={() => window.open('https://wa.me/918073982848', '_blank')}
                 className="border-2 border-white hover:bg-white hover:text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors text-center"
               >
                 Get Study Plan

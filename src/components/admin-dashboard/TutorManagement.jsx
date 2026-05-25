@@ -59,21 +59,66 @@ export default function TutorManagement() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const resizeImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        const resizedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve(resizedFile);
+                    }, 'image/jpeg', 0.9);
+                };
+            };
+        });
+    };
+
     const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
+        let file = e.target.files[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('Image size should be less than 5MB');
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('Image size should be less than 10MB');
             return;
         }
 
         setUploading(true);
-        const uploadToast = toast.loading('Uploading image to Cloudinary...');
+        const uploadToast = toast.loading('Resizing and uploading image...');
         try {
-            const imageUrl = await uploadToCloudinary(file);
+            // Client-side resize before upload
+            const resizedFile = await resizeImage(file);
+            const imageUrl = await uploadToCloudinary(resizedFile);
             setFormData(prev => ({ ...prev, photoUrl: imageUrl }));
-            toast.success('Image uploaded successfully', { id: uploadToast });
+            toast.success('Image processed and uploaded', { id: uploadToast });
         } catch (error) {
             console.error('Upload error:', error);
             toast.error('Failed to upload image', { id: uploadToast });
@@ -105,18 +150,19 @@ export default function TutorManagement() {
             if (editingId) {
                 const response = await updateTeacherAdmin(editingId, payload);
                 setTutors(prev => prev.map(t => (t.id === editingId || t._id === editingId) ? response : t));
-                toast.success('Tutor updated successfully');
+                toast.success('✅ Tutor updated successfully');
             } else {
                 const newTutor = await createTeacherAdmin(payload);
                 setTutors(prev => [...prev, newTutor]);
-                toast.success('Tutor added successfully');
+                toast.success('✅ Tutor added successfully');
             }
             setIsAdding(false);
             setEditingId(null);
             resetForm();
         } catch (error) {
             console.error('Submit error:', error);
-            toast.error(editingId ? 'Failed to update tutor' : 'Failed to add tutor');
+            const errorMsg = error.message || 'Failed to save tutor details';
+            toast.error(`❌ ${errorMsg}`);
         }
     };
 
@@ -125,9 +171,11 @@ export default function TutorManagement() {
         try {
             await deleteTeacherAdmin(id);
             setTutors(prev => prev.filter(t => (t.id !== id && t._id !== id)));
-            toast.success('Tutor deleted successfully');
+            toast.success('✅ Tutor deleted successfully');
         } catch (error) {
-            toast.error('Failed to delete tutor');
+            console.error('Delete error:', error);
+            const errorMsg = error.message || 'Failed to delete tutor';
+            toast.error(`❌ ${errorMsg}`);
         }
     };
 
@@ -168,7 +216,7 @@ export default function TutorManagement() {
     const getImageUrl = (image) => {
         if (!image) return 'https://images.unsplash.com/photo-1544717305-27a734ef1904?auto=format&fit=crop&q=80&w=400';
         if (typeof image === 'string' && image.startsWith('http')) return image;
-        const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://93.127.194.118:9014').replace(/\/$/, '');
+        const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'https://api.astarclasses.com').replace(/\/$/, '');
         const imagePath = typeof image === 'string' ? (image.startsWith('/') ? image : `/${image}`) : '';
         return `${baseUrl}${imagePath}`;
     };
@@ -252,11 +300,12 @@ export default function TutorManagement() {
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Image Upload</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Image Upload (Auto-resized to 800px)</label>
+                                <p className="text-[10px] text-gray-400 mb-2">Tip: Square photos work best. Uploading will auto-resize and optimize your photo.</p>
                                 <div className="flex items-center gap-4">
                                     {formData.photoUrl ? (
                                         <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-100">
-                                            <img src={getImageUrl(formData.photoUrl)} alt="Preview" className="w-full h-full object-cover" />
+                                            <img src={getImageUrl(formData.photoUrl)} alt="Preview" className="w-full h-full object-contain bg-white" />
                                             <button
                                                 type="button"
                                                 onClick={() => setFormData(prev => ({ ...prev, photoUrl: '' }))}
@@ -323,7 +372,7 @@ export default function TutorManagement() {
                                     className="absolute inset-0 z-10"
                                     aria-label={`View full image of ${tutor.fullName || tutor.name}`}
                                 />
-                                <img src={getImageUrl(tutor.photoUrl || tutor.image)} alt={tutor.name} className="w-full h-full object-cover" />
+                                <img src={getImageUrl(tutor.photoUrl || tutor.image)} alt={tutor.name} className="w-full h-full object-contain bg-white" />
                                 <div className="absolute top-3 right-3 flex gap-2 z-20">
                                     <button onClick={() => startEditing(tutor)} className="p-2 bg-white/90 backdrop-blur-sm text-blue-600 rounded-full hover:bg-white shadow-sm transition">
                                         <Edit size={16} />

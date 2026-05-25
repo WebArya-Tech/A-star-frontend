@@ -10,7 +10,7 @@ const ASALevelHub = () => {
       description: 'Advanced physics concepts for university preparation',
       topics: ['Mechanics', 'Fields', 'Nuclear Physics', 'Quantum Physics'],
       color: 'bg-blue-500',
-      image: 'https://images.pexels.com/photos/3791664/pexels-photo-3791664.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Chemistry',
@@ -18,7 +18,7 @@ const ASALevelHub = () => {
       description: 'Comprehensive organic and inorganic chemistry',
       topics: ['Physical Chemistry', 'Organic Synthesis', 'Thermodynamics', 'Kinetics'],
       color: 'bg-green-500',
-      image: 'https://images.pexels.com/photos/2280571/pexels-photo-2280571.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1532187875605-1ef6c237f142?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Mathematics',
@@ -26,7 +26,7 @@ const ASALevelHub = () => {
       description: 'Advanced mathematical concepts and applications',
       topics: ['Pure Mathematics', 'Mechanics', 'Statistics', 'Decision Mathematics'],
       color: 'bg-purple-500',
-      image: 'https://images.pexels.com/photos/3729557/pexels-photo-3729557.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Economics',
@@ -34,7 +34,7 @@ const ASALevelHub = () => {
       description: 'Advanced economic theory and policy analysis',
       topics: ['Market Failures', 'International Trade', 'Development Economics', 'Monetary Policy'],
       color: 'bg-orange-500',
-      image: 'https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Biology',
@@ -42,7 +42,7 @@ const ASALevelHub = () => {
       description: 'Advanced biological systems and processes',
       topics: ['Molecular Biology', 'Genetics & Evolution', 'Ecosystems', 'Human Physiology'],
       color: 'bg-teal-500',
-      image: 'https://images.pexels.com/photos/3825583/pexels-photo-3825583.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Further Mathematics',
@@ -50,7 +50,7 @@ const ASALevelHub = () => {
       description: 'University-level mathematics for top performers',
       topics: ['Complex Analysis', 'Advanced Calculus', 'Number Theory', 'Graph Theory'],
       color: 'bg-indigo-500',
-      image: 'https://images.pexels.com/photos/3729557/pexels-photo-3729557.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=600'
     },
     {
       name: 'Languages',
@@ -58,7 +58,7 @@ const ASALevelHub = () => {
       description: 'Advanced language and literature studies',
       topics: ['Advanced Writing', 'Critical Analysis', 'Literature Studies', 'Linguistics'],
       color: 'bg-pink-500',
-      image: 'https://images.pexels.com/photos/3769021/pexels-photo-3769021.jpeg?auto=compress&cs=tinysrgb&w=400'
+      image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80&w=600'
     }
   ];
 
@@ -117,12 +117,12 @@ const ASALevelHub = () => {
               with expert faculty and secure admission to top universities worldwide.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/demoform"
-                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+              <button
+                onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
               >
                 Book Free Demo
-              </Link>
+              </button>
               <Link
                 to="/counselling"
                 className="border-2 border-white hover:bg-white hover:text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
@@ -281,14 +281,14 @@ const ASALevelHub = () => {
             Join our AS/A Level program and take the first step towards your dream university admission.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/#demo-form"
-              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+            <button
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg"
             >
               Start Your Journey
-            </Link>
+            </button>
             <button
-              onClick={() => window.open('https://wa.me/918861919000', '_blank')}
+              onClick={() => window.open('https://wa.me/918073982848', '_blank')}
               className="border-2 border-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
             >
               Chat with Counselor
