@@ -107,7 +107,7 @@ export default function AdminDashboard() {
     }
   }
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Header */}
       <header className="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 shadow-xl sticky top-0 z-50">
         <div className="px-4 py-4 flex items-center justify-between">

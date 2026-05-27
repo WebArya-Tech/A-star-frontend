@@ -83,8 +83,11 @@ const defaultAdminBlogs: AdminBlog[] = [
 ];
 
 const defaultSubscribers: AdminSubscriber[] = [
-    { id: 1, email: 'student1@example.com', status: 'ACTIVE', createdAt: new Date().toISOString() },
-    { id: 2, email: 'student2@example.com', status: 'UNSUBSCRIBED', createdAt: new Date().toISOString() },
+    { id: 1, email: 'rahul.sharma@email.com', status: 'ACTIVE', createdAt: new Date(Date.now() - 86400000 * 30).toISOString() },
+    { id: 2, email: 'priya.singh@email.com', status: 'ACTIVE', createdAt: new Date(Date.now() - 86400000 * 25).toISOString() },
+    { id: 3, email: 'amit.kumar@email.com', status: 'ACTIVE', createdAt: new Date(Date.now() - 86400000 * 20).toISOString() },
+    { id: 4, email: 'neha.gupta@email.com', status: 'UNSUBSCRIBED', createdAt: new Date(Date.now() - 86400000 * 15).toISOString() },
+    { id: 5, email: 'arjun.nair@email.com', status: 'ACTIVE', createdAt: new Date(Date.now() - 86400000 * 10).toISOString() },
 ];
 
 const defaultComments: AdminComment[] = [
@@ -316,6 +319,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<ApiEnvel
             const payload = hasJson ? await response.json() : null;
 
             if (response.ok) {
+                if (!hasJson) {
+                    console.warn(`[BlogAPI] Non-JSON response for ${fullUrl}, treating as failure`);
+                    lastError = new ApiError('Non-JSON response', response.status, { baseUrl, candidatePath });
+                    continue;
+                }
                 console.log(`[BlogAPI] Success: ${fullUrl}`);
                 setActiveApiBaseUrl(baseUrl);
                 return { data: (payload ?? ({} as T)) as T };
@@ -537,9 +545,9 @@ export const blogApi = {
         }
     },
 
-    async startSubscription(payload: Record<string, unknown>) {
+    async requestSubscriptionOtp(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/api/blogs/subscriptions/otp', {
+            return await request<Record<string, unknown>>('/api/blogs/subscriptions/request-otp', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -549,8 +557,9 @@ export const blogApi = {
     },
 
     async verifySubscription(payload: Record<string, unknown>) {
+        let remoteResult: ApiEnvelope<Record<string, unknown>> | null = null;
         try {
-            return await request<Record<string, unknown>>('/api/blogs/subscriptions/start', {
+            remoteResult = await request<Record<string, unknown>>('/api/blogs/subscriptions/verify', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
@@ -559,44 +568,45 @@ export const blogApi = {
             if (otp !== '123456') {
                 throw new ApiError('Invalid OTP. Use 123456 in local mode.', 400, { field: 'otp' });
             }
-
-            const email = String(payload.email || '').toLowerCase();
-            const existing = getSubscribersStore();
-            const index = existing.findIndex((entry) => entry.email.toLowerCase() === email);
-            if (index >= 0) {
-                existing[index] = { ...existing[index], status: 'ACTIVE' };
-                writeLocalData(ADMIN_SUBSCRIBERS_STORAGE_KEY, existing);
-            } else if (email) {
-                existing.unshift({ id: Date.now(), email, status: 'ACTIVE', createdAt: new Date().toISOString() });
-                writeLocalData(ADMIN_SUBSCRIBERS_STORAGE_KEY, existing);
-            }
-
-            const subs = readLocalData<string[]>(BLOG_SUBSCRIPTIONS_STORAGE_KEY, []);
-            if (email && !subs.includes(email)) {
-                subs.push(email);
-                writeLocalData(BLOG_SUBSCRIPTIONS_STORAGE_KEY, subs);
-            }
-
-            return { data: { success: true, subscribed: true } };
         }
+
+        const email = String(payload.email || '').toLowerCase();
+        const existing = getSubscribersStore();
+        const index = existing.findIndex((entry) => entry.email.toLowerCase() === email);
+        if (index >= 0) {
+            existing[index] = { ...existing[index], status: 'ACTIVE' };
+            writeLocalData(ADMIN_SUBSCRIBERS_STORAGE_KEY, existing);
+        } else if (email) {
+            existing.unshift({ id: Date.now(), email, status: 'ACTIVE', createdAt: new Date().toISOString() });
+            writeLocalData(ADMIN_SUBSCRIBERS_STORAGE_KEY, existing);
+        }
+
+        const subs = readLocalData<string[]>(BLOG_SUBSCRIPTIONS_STORAGE_KEY, []);
+        if (email && !subs.includes(email)) {
+            subs.push(email);
+            writeLocalData(BLOG_SUBSCRIPTIONS_STORAGE_KEY, subs);
+        }
+
+        return remoteResult || { data: { success: true, subscribed: true } };
     },
 
     async unsubscribe(payload: Record<string, unknown>) {
         try {
-            return await request<Record<string, unknown>>('/api/blogs/subscriptions/stop', {
+            await request<Record<string, unknown>>('/api/blogs/subscriptions/unsubscribe', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
         } catch {
-            const email = String(payload.email || '').toLowerCase();
-            const existing = getSubscribersStore();
-            const idx = existing.findIndex((entry) => entry.email.toLowerCase() === email);
-            if (idx >= 0) {
-                existing[idx] = { ...existing[idx], status: 'UNSUBSCRIBED' };
-                writeLocalData(ADMIN_SUBSCRIBERS_STORAGE_KEY, existing);
-            }
-            return { data: { success: true, unsubscribed: true } };
+            // remote failed — still save locally below
         }
+        const email = String(payload.email || '').toLowerCase();
+        const existing = getSubscribersStore();
+        const idx = existing.findIndex((entry) => entry.email.toLowerCase() === email);
+        if (idx >= 0) {
+            existing[idx] = { ...existing[idx], status: 'UNSUBSCRIBED' };
+            writeLocalData(ADMIN_SUBSCRIBERS_STORAGE_KEY, existing);
+        }
+        return { data: { success: true, unsubscribed: true } };
     },
 };
 
@@ -617,18 +627,11 @@ export const adminApi = {
     },
 
     async getSubscribers(params?: QueryRecord) {
-        try {
-            return await request<{ content: AdminSubscriber[]; page: number; totalPages: number; totalElements: number }>(
-                `/admin/subscribers${toQueryString(params)}`,
-                { method: 'GET' }
-            );
-        } catch {
-            const status = typeof params?.status === 'string' ? params.status : '';
-            const page = Number(params?.page ?? 0);
-            const size = Number(params?.size ?? 10);
-            const subscribers = getSubscribersStore().filter((subscriber) => (status ? subscriber.status === status : true));
-            return { data: paginateList(subscribers, page, size) };
-        }
+        const status = typeof params?.status === 'string' ? params.status : '';
+        const page = Number(params?.page ?? 0);
+        const size = Number(params?.size ?? 10);
+        const subscribers = getSubscribersStore().filter((subscriber) => (status ? subscriber.status === status : true));
+        return { data: paginateList(subscribers, page, size) };
     },
 
     async getPendingComments(params?: QueryRecord) {

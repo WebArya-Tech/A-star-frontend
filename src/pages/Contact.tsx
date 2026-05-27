@@ -101,22 +101,11 @@ const Contact = () => {
 
     try {
       // Strict phone validation: must be exactly 10 digits
-      if (formData.phoneNumber) {
-        if (formData.phoneNumber.length < 10) {
-          toast.error('Mobile number is too short. It must be exactly 10 digits.');
-          setIsSubmitting(false);
-          return;
-        }
-        if (formData.phoneNumber.length > 10) {
-          toast.error('Mobile number is too long. It must be exactly 10 digits.');
-          setIsSubmitting(false);
-          return;
-        }
-        if (!/^\d{10}$/.test(formData.phoneNumber)) {
-          toast.error('Please enter a valid 10-digit mobile number (digits only).');
-          setIsSubmitting(false);
-          return;
-        }
+      const phone = formData.phoneNumber || '';
+      if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+        toast.error('Please fill correct 10 digit mobile number');
+        setIsSubmitting(false);
+        return;
       }
 
       await submitContactForm(formData);
@@ -202,7 +191,7 @@ const Contact = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <CenteredModal open={submitted} onClose={() => setSubmitted(false)} title={"Message Sent Successfully!"}>
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Send className="w-8 h-8 text-green-600" />
@@ -247,7 +236,7 @@ const Contact = () => {
       {!isDirect && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-12">
               Quick Ways to Reach Us
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -270,12 +259,12 @@ const Contact = () => {
       )}
 
       {/* Contact Form & Info */}
-      <section className={`py-20 bg-gray-50 ${isDirect ? 'pt-10' : ''}`}>
+      <section className={`py-10 md:py-20 bg-gray-50 ${isDirect ? 'pt-10' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`grid grid-cols-1 ${isDirect ? '' : 'lg:grid-cols-2'} gap-12`}>
             {/* Contact Form */}
-            <div id="contact-form" className={`bg-white rounded-2xl shadow-xl p-8 scroll-mt-24 ${isDirect ? 'max-w-2xl mx-auto' : ''}`}>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Send Us a Message</h2>
+            <div id="contact-form" className={`bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 scroll-mt-24 ${isDirect ? 'max-w-2xl mx-auto' : ''}`}>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Send Us a Message</h2>
               <p className="text-gray-600 mb-8">
                 Fill out the form below and we'll get back to you as soon as possible.
               </p>
@@ -298,7 +287,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
+                      Phone Number *
                     </label>
                     <input
                       type="text"
@@ -310,6 +299,7 @@ const Contact = () => {
                           setFormData(prev => ({ ...prev, phoneNumber: val }));
                         }
                       }}
+                      required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       placeholder="9876543210"
                     />
@@ -392,7 +382,7 @@ const Contact = () => {
             {/* Contact Information */}
             <div className="space-y-8">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">Contact Information</h2>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Contact Information</h2>
                 <p className="text-gray-600 mb-8">
                   We're always here to help. Reach out to us through any of the following methods.
                 </p>
@@ -481,9 +471,9 @@ const Contact = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 bg-white">
+      <section className="py-8 md:py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-12">
             Frequently Asked Questions
           </h2>
           <div className="space-y-8">

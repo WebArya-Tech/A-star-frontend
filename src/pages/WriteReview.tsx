@@ -176,7 +176,7 @@ export default function WriteReview() {
 
   if (submitted || step === 'done') {
     return (
-      <div className="w-full min-h-screen bg-white">
+      <div className="w-full min-h-screen bg-white overflow-x-hidden">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
           <CheckCircle className="w-16 h-16 sm:w-20 sm:h-20 text-green-500 mx-auto mb-6" />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-900 mb-4">Review Submitted Successfully!</h1>
@@ -193,7 +193,7 @@ export default function WriteReview() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-50">
+    <div className="w-full min-h-screen bg-gray-50 overflow-x-hidden">
       <section className="bg-white py-8 sm:py-12 md:py-16 px-4 sm:px-6 border-b border-gray-200">
         <div className="max-w-4xl mx-auto">
           <a href="/reviews" className="inline-flex items-center gap-2 text-blue-900 hover:text-blue-700 font-semibold mb-4 sm:mb-6">

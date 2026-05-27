@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState, useEffect, type ChangeEvent, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { blogApi } from '../../api/blogApi.ts';
 import { Card, Input, Button } from '../ui/index.tsx';
@@ -46,7 +46,7 @@ export const SubscribePage = () => {
     const handleSubscribe = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault(); setLoading(true);
         try { 
-            await blogApi.startSubscription({ email }); 
+            await blogApi.requestSubscriptionOtp({ email }); 
             toast.success('OTP sent to your email!'); 
             setStep('verify'); 
             setResendTimer(300); // 5 minutes
@@ -59,7 +59,7 @@ export const SubscribePage = () => {
         if (resendTimer > 0) return;
         setLoading(true);
         try {
-            await blogApi.startSubscription({ email });
+            await blogApi.requestSubscriptionOtp({ email });
             toast.success('OTP resent successfully!');
             setResendTimer(300); // 5 minutes
         } catch (err) {

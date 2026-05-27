@@ -22,13 +22,13 @@ export default defineConfig({
   // Dev-time proxy to avoid CORS when calling the real backend
   server: {
     proxy: {
-      // Proxy /api/* and /admin/api/* to the real API server
+      // Proxy /api/* and /admin/api/* only; do not proxy /admin-dashboard frontend routes.
       '/api': {
         target: 'https://api.astarclasses.com',
         changeOrigin: true,
         secure: false,
       },
-      '/admin': {
+      '/admin/api': {
         target: 'https://api.astarclasses.com',
         changeOrigin: true,
         secure: false,

@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  getAllClassesAdmin, 
-  createClassAdmin, 
-  updateClassAdmin, 
+import {
+  getAllClassesAdmin,
+  createClassAdmin,
+  updateClassAdmin,
   deleteClassAdmin,
   getAllEnrollmentsAdmin,
   confirmEnrollmentAdmin,
@@ -15,12 +15,12 @@ import Pagination from '../ui/Pagination';
 import { Eye, BookOpen, Edit, Trash2, Check, X, Users } from 'lucide-react';
 
 const DEFAULT_CLASSES = [
-  { 
-    id: '664300000000000000000001', 
-    title: 'Advanced Calculus 101', 
-    category: 'UNDERGRADUATE', 
-    instructorName: 'Prof. Alan Math', 
-    schedule: 'Mon, Wed, Fri - 6:00 PM IST', 
+  {
+    id: '664300000000000000000001',
+    title: 'Advanced Calculus 101',
+    category: 'UNDERGRADUATE',
+    instructorName: 'Prof. Alan Math',
+    schedule: 'Mon, Wed, Fri - 6:00 PM IST',
     maxCapacity: 20,
     enrolledCount: 2,
     availableSeats: 18,
@@ -92,7 +92,7 @@ export default function RunningClassesManagement() {
         page: currentPage - 1,
         size: itemsPerPage
       });
-      
+
       const classList = data.content || (Array.isArray(data) ? data : []);
       setClasses(classList.length > 0 ? classList : DEFAULT_CLASSES);
     } catch (error) {
@@ -131,7 +131,7 @@ export default function RunningClassesManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const token = localStorage.getItem('icfy_token');
     if (!token) {
       toast.error('You must be logged in as an admin to perform this action.');
@@ -139,7 +139,7 @@ export default function RunningClassesManagement() {
     }
 
     setSaving(true);
-    
+
     // Create payload with only the fields expected by the backend
     const payload = {
       title: form.title || '',
@@ -274,7 +274,7 @@ export default function RunningClassesManagement() {
             <div className="md:col-span-2">
               <h3 className="text-lg font-bold text-blue-900 mb-2">{editId ? 'Edit Class' : 'Add New Running Class'}</h3>
             </div>
-            
+
             {/* Basic Information */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-700">Class Title *</label>
@@ -287,7 +287,7 @@ export default function RunningClassesManagement() {
                 required
               />
             </div>
-            
+
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-700">Category *</label>
               <select
@@ -302,7 +302,7 @@ export default function RunningClassesManagement() {
                 <option value="PROFESSIONAL">Professional</option>
               </select>
             </div>
-            
+
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-700">Instructor Name *</label>
               <input
@@ -314,7 +314,7 @@ export default function RunningClassesManagement() {
                 required
               />
             </div>
-            
+
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-700">Fee Information</label>
               <input
@@ -496,7 +496,7 @@ export default function RunningClassesManagement() {
                   const enrolled = c.enrolledCount || 0;
                   const capacity = c.maxCapacity || 20;
                   const enrollmentPercent = (enrolled / capacity) * 100;
-                  
+
                   return (
                     <tr key={c.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="px-4 py-4">
@@ -517,13 +517,12 @@ export default function RunningClassesManagement() {
                             <span className="text-gray-400">{Math.round(enrollmentPercent)}%</span>
                           </div>
                           <div className="w-24 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                enrollmentPercent > 80 ? 'bg-red-500' : 
-                                enrollmentPercent > 50 ? 'bg-yellow-500' : 
-                                'bg-green-500'
-                              }`}
-                              style={{width: `${Math.min(enrollmentPercent, 100)}%`}}
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${enrollmentPercent > 80 ? 'bg-red-500' :
+                                  enrollmentPercent > 50 ? 'bg-yellow-500' :
+                                    'bg-green-500'
+                                }`}
+                              style={{ width: `${Math.min(enrollmentPercent, 100)}%` }}
                             ></div>
                           </div>
                         </div>
@@ -531,12 +530,11 @@ export default function RunningClassesManagement() {
                       <td className="px-4 py-4 text-sm font-bold text-gray-700">{c.feeInfo || '-'}</td>
                       <td className="px-4 py-4">
                         <span
-                          className={`inline-flex px-2 py-1 rounded text-[10px] font-bold text-white shadow-sm ${
-                            c.status === 'ACTIVE' ? 'bg-green-600' : 
-                            c.status === 'INACTIVE' ? 'bg-gray-400' : 
-                            c.status === 'COMPLETED' ? 'bg-blue-600' : 
-                            'bg-red-500'
-                          }`}
+                          className={`inline-flex px-2 py-1 rounded text-[10px] font-bold text-white shadow-sm ${c.status === 'ACTIVE' ? 'bg-green-600' :
+                              c.status === 'INACTIVE' ? 'bg-gray-400' :
+                                c.status === 'COMPLETED' ? 'bg-blue-600' :
+                                  'bg-red-500'
+                            }`}
                         >
                           {c.status}
                         </span>
@@ -560,7 +558,7 @@ export default function RunningClassesManagement() {
             </table>
           </div>
         )}
-        
+
         <div className="mt-6 border-t pt-4">
           <Pagination
             currentPage={currentPage}
@@ -573,144 +571,151 @@ export default function RunningClassesManagement() {
         </div>
       </div>
 
-      {/* Enrollment Requests Section */}
-      {enrollmentRequests.length > 0 && (
-        <div className="bg-white rounded-xl shadow-md p-4 md:p-6 overflow-hidden">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-            <div>
-              <h3 className="text-lg md:text-xl font-bold text-blue-900 flex items-center gap-2">
-                <Users className="text-blue-600" size={20} />
-                Enrollment Requests ({filteredEnrollmentRequests.length})
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">Review and manage student enrollment applications</p>
-            </div>
-            <div className="w-full lg:w-72">
-              <select
-                value={selectedEnrollmentClass}
-                onChange={(e) => {
-                  setSelectedEnrollmentClass(e.target.value);
-                  setEnrollmentPage(1);
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50"
-              >
-                <option value="all">All Running Classes ({enrollmentRequests.length})</option>
-                {classes.map((classItem) => {
-                  const totalRequests = enrollmentRequests.filter((req) => req.classSubject === classItem.title).length;
-                  const studentCount = getClassEnrollmentCount(classItem);
-
-                  return (
-                    <option key={classItem.id} value={classItem.title}>
-                      {classItem.title} ({studentCount} students, {totalRequests} reqs)
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
+      {/* Enrollment Requests Section - Commented out for now */}
+      {/* <div className="bg-white rounded-xl shadow-md p-4 md:p-6 overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+          <div>
+            <h3 className="text-lg md:text-xl font-bold text-blue-900 flex items-center gap-2">
+              <Users className="text-blue-600" size={20} />
+              Enrollment Requests ({filteredEnrollmentRequests.length})
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">Review and manage student enrollment applications</p>
           </div>
+          <div className="w-full lg:w-72">
+            <select
+              value={selectedEnrollmentClass}
+              onChange={(e) => {
+                setSelectedEnrollmentClass(e.target.value);
+                setEnrollmentPage(1);
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50"
+            >
+              <option value="all">All Running Classes ({enrollmentRequests.length})</option>
+              {classes.map((classItem) => {
+                const totalRequests = enrollmentRequests.filter((req) => req.classSubject === classItem.title).length;
+                const studentCount = getClassEnrollmentCount(classItem);
 
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="w-full min-w-[1000px] divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student Info</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Details</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Academic Info</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Class & Batch</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Submission</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedEnrollments.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-bold text-blue-900">{req.studentName || req.fullName}</div>
-                      <div className="text-[10px] text-gray-500 mt-0.5">Parent: {req.parentName || 'N/A'}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-[11px] text-gray-600 flex items-center gap-1.5">
-                        <span className="font-bold">📧</span> {req.email}
-                      </div>
-                      <div className="text-[11px] text-gray-600 mt-1 flex items-center gap-1.5">
-                        <span className="font-bold">📱</span> {req.mobileNumber || req.phone}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-[11px] font-bold text-gray-800">{req.gradeOrClass || 'N/A'}</div>
-                      <div className="text-[10px] text-gray-500 italic mt-0.5 max-w-[150px] truncate">{req.schoolOrCollege || 'N/A'}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-[11px] font-bold text-gray-800">{req.classSubject}</div>
-                      {req.preferredBatch && (
-                        <div className="mt-1">
-                          <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 font-bold">
-                            {req.preferredBatch}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-[10px] text-gray-500">
-                      {new Date(req.submittedAt || req.enrollmentDate || Date.now()).toLocaleDateString('en-IN', {
-                        day: '2-digit', month: 'short', year: 'numeric'
-                      })}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                        req.status === 'Approved' || req.status === 'CONFIRMED' ? 'bg-green-50 text-green-700 border-green-200' : 
-                        req.status === 'Rejected' || req.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' : 
-                        'bg-yellow-50 text-yellow-700 border-yellow-200'
-                      }`}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-2">
-                        {(req.status === 'PENDING' || req.status === 'pending') ? (
-                          <>
-                            <button
-                              className="px-2.5 py-1 rounded bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-colors shadow-sm"
-                              onClick={() => handleConfirmEnrollment(req.id)}
-                            >
-                              Approve
-                            </button>
-                            <button
-                              className="px-2.5 py-1 rounded bg-red-600 text-white text-[10px] font-bold hover:bg-red-700 transition-colors shadow-sm"
-                              onClick={() => handleRejectEnrollment(req.id)}
-                            >
-                              Reject
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            className="p-1.5 rounded-full text-red-500 hover:bg-red-50 transition-colors"
-                            onClick={() => handleDeleteEnrollment(req.id)}
-                            title="Delete Record"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="mt-6 border-t pt-4">
-            <Pagination
-              currentPage={enrollmentPage}
-              totalPages={enrollmentTotalPages}
-              onPageChange={setEnrollmentPage}
-              totalItems={filteredEnrollmentRequests.length}
-              itemsPerPage={itemsPerPage}
-              alwaysShow={true}
-            />
+                return (
+                  <option key={classItem.id} value={classItem.title}>
+                    {classItem.title} ({studentCount} students, {totalRequests} reqs)
+                  </option>
+                );
+              })}
+            </select>
           </div>
         </div>
-      )}
-      
+
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="w-full min-w-[1000px] divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Student Info</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Details</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Academic Info</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Class & Batch</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Message</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Submission</th>
+                <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {paginatedEnrollments.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-500">
+                    No enrollment requests found.
+                  </td>
+                </tr>
+              ) : paginatedEnrollments.map((req) => (
+                <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="text-sm font-bold text-blue-900">{req.studentName || req.fullName}</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">Parent: {req.parentName || 'N/A'}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-[11px] text-gray-600 flex items-center gap-1.5">
+                      <span className="font-bold">📧</span> {req.email}
+                    </div>
+                    <div className="text-[11px] text-gray-600 mt-1 flex items-center gap-1.5">
+                      <span className="font-bold">📱</span> {req.mobileNumber || req.phone}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-[11px] font-bold text-gray-800">{req.gradeOrClass || 'N/A'}</div>
+                    <div className="text-[10px] text-gray-500 italic mt-0.5 max-w-[150px] truncate">{req.schoolOrCollege || 'N/A'}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-[11px] font-bold text-gray-800">{req.classSubject}</div>
+                    {req.preferredBatch && (
+                      <div className="mt-1">
+                        <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 font-bold">
+                          {req.preferredBatch}
+                        </span>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 max-w-[220px] break-words">
+                    {req.message || req.comment || '—'}
+                  </td>
+                  <td className="px-4 py-3 text-[10px] text-gray-500">
+                    {new Date(req.submittedAt || req.enrollmentDate || Date.now()).toLocaleDateString('en-IN', {
+                      day: '2-digit', month: 'short', year: 'numeric'
+                    })}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border ${req.status === 'Approved' || req.status === 'CONFIRMED' ? 'bg-green-50 text-green-700 border-green-200' :
+                        req.status === 'Rejected' || req.status === 'REJECTED' ? 'bg-red-50 text-red-700 border-red-200' :
+                          'bg-yellow-50 text-yellow-700 border-yellow-200'
+                      }`}>
+                      {req.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      {(req.status === 'PENDING' || req.status === 'pending') ? (
+                        <>
+                          <button
+                            className="px-2.5 py-1 rounded bg-green-600 text-white text-[10px] font-bold hover:bg-green-700 transition-colors shadow-sm"
+                            onClick={() => handleConfirmEnrollment(req.id)}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="px-2.5 py-1 rounded bg-red-600 text-white text-[10px] font-bold hover:bg-red-700 transition-colors shadow-sm"
+                            onClick={() => handleRejectEnrollment(req.id)}
+                          >
+                            Reject
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="p-1.5 rounded-full text-red-500 hover:bg-red-50 transition-colors"
+                          onClick={() => handleDeleteEnrollment(req.id)}
+                          title="Delete Record"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-6 border-t pt-4">
+          <Pagination
+            currentPage={enrollmentPage}
+            totalPages={enrollmentTotalPages}
+            onPageChange={setEnrollmentPage}
+            totalItems={filteredEnrollmentRequests.length}
+            itemsPerPage={itemsPerPage}
+            alwaysShow={true}
+          />
+        </div>
+      </div> */}
+
       {/* Class Details Modal */}
       {showClassDetailsModal && selectedClassForDetails && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">

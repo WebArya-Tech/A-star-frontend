@@ -160,9 +160,9 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-gray-900 via-blue-900 to-slate-800 text-white">
+      <section className="relative py-10 md:py-20 bg-gradient-to-br from-gray-900 via-blue-900 to-slate-800 text-white">
         <div className="absolute inset-0 bg-black/30"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -198,7 +198,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
               <img
                 src={currentSubject.image}
                 alt={currentSubject.name}
-                className="w-full h-96 object-cover rounded-2xl shadow-2xl"
+                className="w-full h-48 sm:h-64 md:h-96 object-cover rounded-2xl shadow-2xl"
               />
               <div className={`absolute -bottom-4 -right-4 w-24 h-24 ${currentSubject.color} rounded-full flex items-center justify-center shadow-lg`}>
                 <BookOpen className="h-12 w-12 text-white" />
@@ -209,7 +209,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
       </section>
 
       {/* Class Format */}
-      <section className="py-16 bg-white">
+      <section className="py-8 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
             How Our {currentSubject.name} Classes Work
@@ -244,7 +244,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
       </section>
 
       {/* Syllabus Coverage */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-8 md:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
@@ -275,7 +275,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
       </section>
 
       {/* Resources */}
-      <section className="py-16 bg-white">
+      <section className="py-8 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
             Study Resources & Materials
@@ -295,7 +295,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
       </section>
 
       {/* Results Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <section className="py-8 md:py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
@@ -308,15 +308,15 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-yellow-400 mb-2">96%</div>
+              <div className="text-2xl md:text-4xl font-bold text-yellow-400 mb-2">96%</div>
               <div className="text-blue-100">Students achieve A*/A grades</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-yellow-400 mb-2">100+</div>
+              <div className="text-2xl md:text-4xl font-bold text-yellow-400 mb-2">100+</div>
               <div className="text-blue-100">Students taught annually</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-yellow-400 mb-2">15+</div>
+              <div className="text-2xl md:text-4xl font-bold text-yellow-400 mb-2">15+</div>
               <div className="text-blue-100">Years of expertise</div>
             </div>
           </div>
@@ -324,7 +324,7 @@ const SubjectPage: React.FC<SubjectPageProps> = ({ level }) => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gray-900 text-white">
+      <section className="py-10 md:py-20 bg-gray-900 text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Ready to Excel in {level} {currentSubject.name}?

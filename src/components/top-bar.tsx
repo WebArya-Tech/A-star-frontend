@@ -55,7 +55,7 @@ const TopBar = () => {
             rel="noopener noreferrer"
             className="text-xs font-medium hover:text-[#FFD600] transition flex items-center gap-1"
           >
-            💳 Pay Fees
+            Pay Fees
           </a>
           <Link
             to="/demoform"

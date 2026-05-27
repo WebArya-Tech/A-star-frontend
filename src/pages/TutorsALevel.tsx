@@ -12,11 +12,11 @@ const TutorsALevel = () => {
     }));
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-12 px-4 overflow-x-hidden">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-gray-800 mb-4">A Level Tutors</h1>
+                    <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-4">A Level Tutors</h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                         Our A Level specialists prepare you for university entrance exams. Expert tutors in all major subjects with proven success records.
                     </p>

@@ -108,16 +108,16 @@ const Ask: React.FC = () => {
 
     // (navigation removed)
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-12 overflow-x-hidden">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Ask a Question</h1>
+                    <h1 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Ask a Question</h1>
                     <p className="mt-3 text-lg text-gray-700 max-w-2xl mx-auto">
                         Select a category, choose the course/topic, then describe your question or upload a screenshot. Our team will answer and close it when resolved.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-10">
                     <section className="bg-white rounded-2xl shadow-lg border border-purple-200 p-8 hover:shadow-xl transition-shadow relative">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-semibold text-purple-800">Ask a Question</h2>

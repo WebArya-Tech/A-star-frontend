@@ -99,7 +99,7 @@ const defaultTutors: Tutor[] = [
 function readTutors(): Tutor[] {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        let parsed = raw ? (JSON.parse(raw) as any[]) : null;
+        const parsed = raw ? (JSON.parse(raw) as any[]) : null;
 
         if (parsed && parsed.length > 0) {
             // Migration for categories

@@ -28,7 +28,7 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
 
     return (
         <>
-            <div className="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col h-full">
+            <div className="group bg-white rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 flex flex-col h-full">
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
                     <button
                         type="button"
@@ -54,7 +54,7 @@ const TutorCard = ({ tutor }: { tutor: any }) => {
                     </span>
                 </div>
 
-                <div className="p-8 flex-1 flex flex-col items-center text-center">
+                <div className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col items-center text-center">
                     <div className="mb-4 w-full">
                         <div className="flex flex-col gap-3 mb-4 items-center">
                             <div className="flex flex-col gap-2 items-center">
@@ -171,9 +171,9 @@ const Tutors = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="min-h-screen bg-[#F8FAFC] overflow-x-hidden">
             {/* Elegant Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-800 py-24">
+            <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-800 py-12 md:py-24">
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute -top-24 -left-24 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse"></div>
                     <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-blue-400 rounded-full blur-3xl"></div>
@@ -221,7 +221,7 @@ const Tutors = () => {
             </div>
 
             {/* Main Tutors Section */}
-            <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <section className="py-12 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="w-16 h-16 border-4 border-blue-900 border-t-transparent rounded-full animate-spin"></div>

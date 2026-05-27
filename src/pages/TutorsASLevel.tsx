@@ -12,11 +12,11 @@ const TutorsASLevel = () => {
     }));
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 py-12 px-4">
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 py-12 px-4 overflow-x-hidden">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-gray-800 mb-4">AS & A Level Tutors</h1>
+                    <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-4">AS & A Level Tutors</h1>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                         Our advanced tutors are experts in AS and A Level curricula. Prepare for university with personalized guidance from subject specialists.
                     </p>

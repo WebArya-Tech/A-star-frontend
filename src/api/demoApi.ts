@@ -1,7 +1,6 @@
 import { makeApiCall, type QueryRecord } from './runtimeApiBase.ts';
 
 const FORCE_LOCAL_DEMO_API = String(import.meta.env.VITE_USE_LOCAL_DEMO_API || '').toLowerCase() === 'true';
-const HAS_REMOTE_BASE = Boolean(import.meta.env.VITE_API_BASE_URL);
 const USE_LOCAL_MODE = FORCE_LOCAL_DEMO_API;
 
 const DEMO_GRADES_STORAGE_KEY = 'icfy_demo_grades_v4';
@@ -18,6 +17,14 @@ type Board = {
     id: string;
     name: string;
     displayName: string;
+};
+
+type PageResponse<T> = {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
 };
 
 export type DemoScheduleRequest = {
@@ -44,14 +51,16 @@ type AdminDemoSchedule = {
     id: string;
     studentName: string;
     parentName: string;
-    grade: string;
-    board: string;
-    email?: string;
+    emailId: string;
+    mobileNumber: string;
+    boardId?: string;
+    board?: { id: string; name: string; createdAt?: string } | null;
+    gradeId?: string;
+    grade?: { id: string; name: string; createdAt?: string } | null;
     preferredDate: string;
     preferredTime: string;
-    status: 'SCHEDULED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
-    meetingLink?: string;
-    scheduledAt: string;
+    status: 'PENDING' | 'APPROVED' | 'CANCELLED';
+    cancelReason?: string;
     createdAt: string;
     updatedAt: string;
 };
@@ -226,9 +235,8 @@ async function getAdminGrades(): Promise<Grade[]> {
     }
 
     try {
-        const response = await makeApiCall<any>('GET', '/api/admin/demo/settings/grades');
-        // Handle both direct array or { data: [] } format
-        const grades = Array.isArray(response) ? response : (response?.data || response?.content || []);
+        const response = await makeApiCall<unknown>('GET', '/api/admin/demo/settings/grades');
+        const grades = Array.isArray(response) ? response : (response as Record<string, unknown>)?.data || (response as Record<string, unknown>)?.content || [];
         return Array.isArray(grades) ? grades : getLocalGrades();
     } catch (error) {
         console.error('Failed to fetch admin grades:', error);
@@ -256,10 +264,10 @@ async function createAdminGrade(gradeData: { name: string }): Promise<Grade> {
     }
 
     try {
-        const response = await makeApiCall<any>('POST', '/api/admin/demo/settings/grades', {
+        const response = await makeApiCall<unknown>('POST', '/api/admin/demo/settings/grades', {
             name: gradeData.name
         });
-        return response;
+        return response as Grade;
     } catch (error) {
         console.error('Failed to create grade:', error);
         throw error;
@@ -270,7 +278,7 @@ async function updateAdminGrade(id: string, gradeData: { name: string }): Promis
     if (USE_LOCAL_MODE) {
         const stored = localStorage.getItem(DEMO_GRADES_STORAGE_KEY);
         const grades = stored ? JSON.parse(stored) : [];
-        const index = grades.findIndex(g => g.id === id);
+        const index = grades.findIndex((g: Grade) => g.id === id);
         if (index !== -1) {
             grades[index] = { ...grades[index], ...gradeData, displayName: gradeData.name };
             localStorage.setItem(DEMO_GRADES_STORAGE_KEY, JSON.stringify(grades));
@@ -280,8 +288,8 @@ async function updateAdminGrade(id: string, gradeData: { name: string }): Promis
     }
 
     try {
-        const response = await makeApiCall<any>('PUT', `/api/admin/demo/settings/grades/${id}`, { name: gradeData.name });
-        return response.data || response;
+        const response = await makeApiCall<unknown>('PUT', `/api/admin/demo/settings/grades/${id}`, { name: gradeData.name });
+        return (response as Record<string, unknown>)?.data as Grade || (response as Grade);
     } catch (error) {
         console.error('Failed to update grade:', error);
         throw error;
@@ -292,7 +300,7 @@ async function deleteAdminGrade(id: string): Promise<void> {
     if (USE_LOCAL_MODE) {
         const stored = localStorage.getItem(DEMO_GRADES_STORAGE_KEY);
         const grades = stored ? JSON.parse(stored) : [];
-        const filtered = grades.filter(g => g.id !== id);
+        const filtered = grades.filter((g: Grade) => g.id !== id);
         localStorage.setItem(DEMO_GRADES_STORAGE_KEY, JSON.stringify(filtered));
         return;
     }
@@ -316,8 +324,8 @@ async function getAdminBoards(): Promise<Board[]> {
     }
 
     try {
-        const response = await makeApiCall<any>('GET', '/api/admin/demo/settings/boards');
-        const boards = Array.isArray(response) ? response : (response?.data || response?.content || []);
+        const response = await makeApiCall<unknown>('GET', '/api/admin/demo/settings/boards');
+        const boards = Array.isArray(response) ? response : (response as Record<string, unknown>)?.data || (response as Record<string, unknown>)?.content || [];
         return Array.isArray(boards) ? boards : getLocalBoards();
     } catch (error) {
         console.error('Failed to fetch admin boards:', error);
@@ -345,10 +353,10 @@ async function createAdminBoard(boardData: { name: string }): Promise<Board> {
     }
 
     try {
-        const response = await makeApiCall<any>('POST', '/api/admin/demo/settings/boards', {
+        const response = await makeApiCall<unknown>('POST', '/api/admin/demo/settings/boards', {
             name: boardData.name
         });
-        return response;
+        return response as Board;
     } catch (error) {
         console.error('Failed to create board:', error);
         throw error;
@@ -359,7 +367,7 @@ async function updateAdminBoard(id: string, boardData: { name: string }): Promis
     if (USE_LOCAL_MODE) {
         const stored = localStorage.getItem(DEMO_BOARDS_STORAGE_KEY);
         const boards = stored ? JSON.parse(stored) : [];
-        const index = boards.findIndex(b => b.id === id);
+        const index = boards.findIndex((b: Board) => b.id === id);
         if (index !== -1) {
             boards[index] = { ...boards[index], ...boardData, displayName: boardData.name };
             localStorage.setItem(DEMO_BOARDS_STORAGE_KEY, JSON.stringify(boards));
@@ -369,8 +377,8 @@ async function updateAdminBoard(id: string, boardData: { name: string }): Promis
     }
 
     try {
-        const response = await makeApiCall<any>('PUT', `/api/admin/demo/settings/boards/${id}`, { name: boardData.name });
-        return response.data || response;
+        const response = await makeApiCall<unknown>('PUT', `/api/admin/demo/settings/boards/${id}`, { name: boardData.name });
+        return (response as Record<string, unknown>)?.data as Board || (response as Board);
     } catch (error) {
         console.error('Failed to update board:', error);
         throw error;
@@ -381,7 +389,7 @@ async function deleteAdminBoard(id: string): Promise<void> {
     if (USE_LOCAL_MODE) {
         const stored = localStorage.getItem(DEMO_BOARDS_STORAGE_KEY);
         const boards = stored ? JSON.parse(stored) : [];
-        const filtered = boards.filter(b => b.id !== id);
+        const filtered = boards.filter((b: Board) => b.id !== id);
         localStorage.setItem(DEMO_BOARDS_STORAGE_KEY, JSON.stringify(filtered));
         return;
     }
@@ -394,7 +402,7 @@ async function deleteAdminBoard(id: string): Promise<void> {
     }
 }
 
-async function getAdminSchedules(params?: { date?: string; status?: string; page?: number; size?: number; sortBy?: string; sortDir?: string }): Promise<any> {
+async function getAdminSchedules(params?: { date?: string; status?: string; page?: number; size?: number; sortBy?: string; sortDir?: string }): Promise<PageResponse<AdminDemoSchedule>> {
     if (USE_LOCAL_MODE) {
         const stored = localStorage.getItem(DEMO_SCHEDULES_STORAGE_KEY);
         const content = stored ? JSON.parse(stored) : [];
@@ -415,7 +423,7 @@ async function getAdminSchedules(params?: { date?: string; status?: string; page
             });
         }
         // The API returns the paginated object directly
-        return await makeApiCall<any>('GET', '/api/admin/demo/schedule', undefined, queryParams);
+        return await makeApiCall<PageResponse<AdminDemoSchedule>>('GET', '/api/admin/demo/schedule', undefined, queryParams);
     } catch (error) {
         console.error('Failed to fetch admin schedules:', error);
         throw error;
@@ -426,7 +434,7 @@ async function approveAdminSchedule(id: string): Promise<AdminDemoSchedule> {
     if (USE_LOCAL_MODE) {
         const stored = localStorage.getItem(DEMO_SCHEDULES_STORAGE_KEY);
         const schedules = stored ? JSON.parse(stored) : [];
-        const index = schedules.findIndex(s => s.id === id);
+        const index = schedules.findIndex((s: AdminDemoSchedule) => s.id === id);
         if (index !== -1) {
             schedules[index].status = 'APPROVED';
             schedules[index].updatedAt = new Date().toISOString();
@@ -437,8 +445,8 @@ async function approveAdminSchedule(id: string): Promise<AdminDemoSchedule> {
     }
 
     try {
-        const response = await makeApiCall<any>('PUT', `/api/admin/demo/schedule/${id}/approve`);
-        return response.data || response;
+        const response = await makeApiCall<unknown>('PUT', `/api/admin/demo/schedule/${id}/approve`);
+        return response as AdminDemoSchedule;
     } catch (error) {
         console.error('Failed to approve schedule:', error);
         throw error;
@@ -449,7 +457,7 @@ async function cancelAdminSchedule(id: string, cancelReason: string = 'Cancelled
     if (USE_LOCAL_MODE) {
         const stored = localStorage.getItem(DEMO_SCHEDULES_STORAGE_KEY);
         const schedules = stored ? JSON.parse(stored) : [];
-        const index = schedules.findIndex(s => s.id === id);
+        const index = schedules.findIndex((s: AdminDemoSchedule) => s.id === id);
         if (index !== -1) {
             schedules[index].status = 'CANCELLED';
             schedules[index].cancelReason = cancelReason;
@@ -461,8 +469,8 @@ async function cancelAdminSchedule(id: string, cancelReason: string = 'Cancelled
     }
 
     try {
-        const response = await makeApiCall<any>('PUT', `/api/admin/demo/schedule/${id}/cancel`, { cancelReason });
-        return response.data || response;
+        const response = await makeApiCall<unknown>('PUT', `/api/admin/demo/schedule/${id}/cancel`, { cancelReason });
+        return response as AdminDemoSchedule;
     } catch (error) {
         console.error('Failed to cancel schedule:', error);
         throw error;

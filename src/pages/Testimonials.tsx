@@ -158,7 +158,7 @@ const Testimonials = () => {
   const paginatedTestimonials = filteredTestimonials.slice(0, visibleCount);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
@@ -248,7 +248,7 @@ const Testimonials = () => {
           ) : (
             <>
               <div className="text-center max-w-3xl mx-auto mb-6">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">
                   Student Testimonials
                 </h1>
                 <div className="h-1.5 w-24 bg-indigo-600 mx-auto rounded-full"></div>
@@ -267,7 +267,7 @@ const Testimonials = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-10">
                 {paginatedTestimonials.map((testimonial, index) => {
                   const id = testimonial.id || testimonial._id;
                   const studentName = testimonial.name || testimonial.reviewerName || 'Student';

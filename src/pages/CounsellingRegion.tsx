@@ -176,9 +176,9 @@ const CounsellingRegion = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative py-20">
+      <section className="relative py-10 md:py-20">
         <div className="absolute inset-0">
           <img
             src={currentRegion.image}
@@ -214,7 +214,7 @@ const CounsellingRegion = () => {
       </section>
 
       {/* Key Advantages */}
-      <section className="py-16 bg-white">
+      <section className="py-8 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
             Why Choose {currentRegion.name}?
@@ -231,7 +231,7 @@ const CounsellingRegion = () => {
       </section>
 
       {/* Top Universities */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-8 md:py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
             Top Universities
@@ -332,7 +332,7 @@ const CounsellingRegion = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+      <section className="py-10 md:py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Ready to Apply to {currentRegion.name}?

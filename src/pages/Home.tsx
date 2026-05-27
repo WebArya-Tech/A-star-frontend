@@ -105,7 +105,7 @@ const Home = () => {
 
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white py-10">
         <div className="absolute inset-0 bg-black/20"></div>
@@ -139,7 +139,7 @@ const Home = () => {
                 </button>
               </div>
               {/* Stats */}
-              <div className="grid grid-cols-3 gap-x-8 gap-y-4 mt-8">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-4 mt-8">
                 <div className="text-center">
                   <div className="text-lg font-bold text-yellow-400">95%</div>
                   <div className="text-xs text-gray-300">A*/A Grades</div>
@@ -165,7 +165,7 @@ const Home = () => {
       </section>
 
       {/* Why A Star Classes */}
-      <section className="py-20 bg-white">
+      <section className="py-10 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -178,7 +178,7 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="group bg-white border border-gray-200 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 hover:border-blue-500">
+              <div key={index} className="group bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-blue-500">
                 <div className="mb-6 group-hover:scale-110 transition-transform duration-300">
                   {feature.icon}
                 </div>
@@ -191,7 +191,7 @@ const Home = () => {
       </section>
 
       {/* Subjects & Tracks */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-10 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -246,7 +246,7 @@ const Home = () => {
       </section>
 
       {/* Results & Proof */}
-      <section className="py-20 bg-white">
+      <section className="py-10 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -259,19 +259,19 @@ const Home = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">95%</div>
+              <div className="text-2xl sm:text-4xl font-bold text-blue-600 mb-2">95%</div>
               <div className="text-gray-700">Students Score A*/A</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">500+</div>
+              <div className="text-2xl sm:text-4xl font-bold text-green-600 mb-2">500+</div>
               <div className="text-gray-700">Students Guided</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">50+</div>
+              <div className="text-2xl sm:text-4xl font-bold text-purple-600 mb-2">50+</div>
               <div className="text-gray-700">Top Universities</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-600 mb-2">8+</div>
+              <div className="text-2xl sm:text-4xl font-bold text-orange-600 mb-2">8+</div>
               <div className="text-gray-700">Years Experience</div>
             </div>
           </div>
@@ -297,7 +297,7 @@ const Home = () => {
       </section>
 
       {/* How Classes Work */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-10 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -327,7 +327,7 @@ const Home = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 bg-white">
+      <section className="py-10 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -341,7 +341,7 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {tutors.map((tutor) => (
               <div key={tutor._id || tutor.id} className="bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col h-full">
-                <div className="h-80 overflow-hidden relative bg-gray-100 flex items-center justify-center">
+                <div className="h-48 sm:h-64 md:h-80 overflow-hidden relative bg-gray-100 flex items-center justify-center">
                   <img src={getTutorImageUrl(tutor)} alt={tutor.name} className="w-full h-full object-contain" />
                 </div>
                 <div className="p-6 flex-1 flex flex-col text-center">
@@ -376,7 +376,7 @@ const Home = () => {
       </section>
 
       {/* Demo Form Section */}
-      <section id="demo-form" className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <section id="demo-form" className="py-10 md:py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">

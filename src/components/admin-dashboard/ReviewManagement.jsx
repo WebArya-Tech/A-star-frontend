@@ -207,7 +207,7 @@ export default function ReviewManagement() {
                           <Eye size={18} />
                         </button>
 
-                        {review.status === 'PENDING' && (
+                        {review.status?.toUpperCase() === 'PENDING' && (
                           <>
                             <button
                               onClick={() => handleApprove(review.id)}
@@ -373,7 +373,7 @@ export default function ReviewManagement() {
                 Close View
               </button>
 
-              {viewModal.status === 'PENDING' && (
+              {viewModal.status?.toUpperCase() === 'PENDING' && (
                 <>
                   <button
                     onClick={() => handleReject(viewModal.id)}

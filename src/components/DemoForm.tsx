@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Check, Calendar, Clock, Edit3 } from 'lucide-react';
+import { Send, Calendar, Clock, Edit3, Check } from 'lucide-react';
 import { demoApi } from '../api/demoApi';
 import toast from 'react-hot-toast';
-import CenteredModal from './CenteredModal';
 
 interface FormData {
   studentName: string;
@@ -27,7 +26,11 @@ interface Board {
   displayName: string;
 }
 
-const DemoForm = () => {
+interface DemoFormProps {
+  onSuccess?: () => void;
+}
+
+const DemoForm: React.FC<DemoFormProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState<FormData>({
     studentName: '',
     parentName: '',
@@ -49,6 +52,16 @@ const DemoForm = () => {
   const [loadingGrades, setLoadingGrades] = useState(true);
   const [loadingBoards, setLoadingBoards] = useState(true);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
+
+  // Auto-close success modal after 3 seconds
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        setIsSubmitted(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted]);
 
   // Load grades and boards on component mount
   useEffect(() => {
@@ -123,18 +136,18 @@ const DemoForm = () => {
   };
 
   const handleSendOtp = async () => {
-    if (!formData.email) {
-      toast.error('Please enter your email address to receive OTP');
-      return;
-    }
-
     if (!formData.mobileNumber || formData.mobileNumber.length !== 10) {
-      toast.error('Mobile number must be exactly 10 digits');
+      toast.error('Please fill correct 10 digit mobile number');
       return;
     }
 
     if (!/^\d{10}$/.test(formData.mobileNumber)) {
-      toast.error('Please enter digits only for the mobile number');
+      toast.error('Please fill correct 10 digit mobile number');
+      return;
+    }
+
+    if (!formData.email) {
+      toast.error('Please enter your email address to receive OTP');
       return;
     }
 
@@ -179,6 +192,11 @@ const DemoForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.mobileNumber || formData.mobileNumber.length !== 10) {
+      toast.error('Please fill correct 10 digit mobile number');
+      return;
+    }
+
     if (!otpStep) {
       toast.error('Please request an OTP first');
       return;
@@ -211,6 +229,7 @@ const DemoForm = () => {
 
       setIsSubmitted(true);
       toast.success('✅ Demo scheduled successfully!');
+      setTimeout(() => onSuccess?.(), 3000);
     } catch (error: any) {
       console.error('Demo scheduling error:', error);
       const errorMsg = error.message || 'Failed to schedule demo. Please check your OTP and try again.';
@@ -223,27 +242,22 @@ const DemoForm = () => {
 
 
   return (
-    <>
-      <CenteredModal open={isSubmitted} onClose={() => setIsSubmitted(false)} title="Thank You!">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Check className="w-8 h-8 text-green-600" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Thank You!</h3>
-        <p className="text-gray-600 mb-4 text-center">
-          We've received your request for a free demo. We'll confirm your session shortly and send you the meeting details.
-        </p>
-        <p className="text-sm text-gray-500 text-center">
-          You'll receive a confirmation email and WhatsApp message with next steps.
-        </p>
-      </CenteredModal>
-
-      <div className="demo-form max-w-md mt-10 mx-auto bg-white rounded-2xl shadow-xl p-8">
+    <div className="demo-form max-w-md mt-10 mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 relative">
+        {isSubmitted && (
+          <div className="absolute inset-0 bg-white rounded-2xl flex flex-col items-center justify-center p-8 text-center z-10 animate-in fade-in duration-300">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+              <Check className="w-10 h-10 text-green-600" strokeWidth={3} />
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 mb-2">Thank You!</h3>
+            <p className="text-gray-600 font-medium leading-relaxed">Your demo has been scheduled successfully. Our team will contact you shortly.</p>
+          </div>
+        )}
         <div className="text-center mb-6">
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Schedule Your Free Demo</h3>
           <p className="text-gray-600">Experience our teaching methodology with a personalized demo class</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Student Name *
@@ -274,7 +288,7 @@ const DemoForm = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Grade *
@@ -322,7 +336,7 @@ const DemoForm = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Preferred Date *
@@ -374,6 +388,12 @@ const DemoForm = () => {
                 setFormData(prev => ({ ...prev, mobileNumber: val }));
                 setIsOtpVerified(false);
                 setOtpStep(false);
+              }}
+              onBlur={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                if (val.length > 0 && val.length !== 10) {
+                  toast.error('Please fill correct 10 digit mobile number');
+                }
               }}
               required
               placeholder="Enter 10-digit mobile number"
@@ -503,7 +523,6 @@ const DemoForm = () => {
           </div>
         </div>
       </div>
-    </>
   );
 };
 
